@@ -1,0 +1,37 @@
+#!/bin/bash
+# 2014-08-28
+## L >< P (partkey)
+mkfifo tmp1.csv 
+(cut -d\| -f2,5,6 lineitem.tbl | sort -t\| -k1,1 | cat <(cut -d\| -f2,5,6 lineitem.csv) -  > tmp1.csv)&
+
+cut -d\| -f1,4,7 part.tbl | grep 'Brand#23' | grep 'MED BOX'  |sort -t\| -k1,1 | cat  <(cut -d\| -f1,4,7 part.csv) - |\
+join --header -t\| -1 1 -2 1 tmp1.csv - | tee join1.csv |\
+
+#avg(l_quantity) pro partkey
+awk -F\| '
+	NR==1{print $1,"avg("$2")"}
+	NR==2{g1=$1;sum=$2;count=1}
+	NR>2{
+		if(g1==$1){
+			sum+=$2;
+			count++;
+		}else{
+			print g1,sum/count;
+			g1=$1; sum=$2; count=1;
+		}
+	}
+	END{print g1,sum/count}
+' OFS=\| > tmpavgs.csv
+
+#dann join mit join1
+join --header -t\| -1 1 -2 1 join1.csv tmpavgs.csv |\
+#greife die relevanten raus
+awk -F\| '
+	BEGIN{
+		print "avg_yearly"
+		sum=0
+	}
+	NR>1 && $2<$6*0.2 {sum+=$3}
+	END{ print sum/7.0 }
+'
+rm tmp1.csv join1.csv

@@ -1,0 +1,32 @@
+% Abstract for the TUM report document
+% Included by MAIN.TEX
+
+
+\clearemptydoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Abstract}	
+
+
+
+
+
+\vspace*{2cm}
+\begin{center}
+{\Large \bf Abstract}
+\end{center}
+\vspace{1cm}
+
+This work is about bash scripts analyzing flat files (commonly known as CSV files) that will be compared to SQL queries doing the same on relational databases.\\
+
+Methods for analyzing data will be tested on their efficiency and how they could be a\-dap\-ted for use with relational databases.
+That is why some useful familiar unix command line tools as well as newer innovations using the command line will be presented.
+But in the end, it shows the disadvantage of common scripts in fields of duration and maintainability.\\
+
+The first goal is a implementation of the TPC-H benchmark only using unix command line tools, afterwards a bash to SQL converter will be presented, which makes query processing on flat file databases much easier.\\
+
+As a result of performance tests using TPC-H benchmarks, times about up to 15 minutes for processing a query, command line tools should be replaced by an equivalent SQL query.\\
+
+The presented Bash2SQL compiler converts each command to SQL statements and con\-nects SQL queries, where their origin commands are in one pipeline. The produced SQL query can stand alone or be embedded in a new bash script.
+
+%Performance tests on query processing on flat file databases using bash and on modern relational databases using SQL and developing a Bash to SQL compiler to substitute command line tools
+

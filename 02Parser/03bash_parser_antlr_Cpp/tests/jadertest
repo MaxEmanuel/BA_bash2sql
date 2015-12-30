@@ -1,0 +1,18 @@
+#!/bin/bash
+# ein Kommentar
+cat "professoren" | cut -f1-3 - | grep sokrates | sort -k2
+cut -f1-4 exampletable | grep soki > tmp1.csv
+cat professoren | join -1 1 -2 2 erste - 
+cut -f1-3 dererste | join -1 4 -2 7 derzweite - 
+cat professoren | wc -l | juhu
+mannoman | scho wieder der Franz mal zwei  
+cat example | uniq -c 
+cat exampletable | uniq -c
+cat exampletable | uniq
+
+for i in a b c
+do
+	cat i
+	emil und die Detektive
+done
+join -1 1 -2 2 <(cat mytab) <(cat mytab2)

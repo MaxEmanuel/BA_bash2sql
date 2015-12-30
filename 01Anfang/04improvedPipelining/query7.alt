@@ -1,0 +1,70 @@
+#!/bin/bash
+#2014-08-27
+mkfifo tmp{1,2,3}.csv
+#header
+(awk -F\| 'NR==1{print $1"|"$4}' supplier.csv > tmp2.csv &
+awk -F\| '{print $1"|"$4}' supplier.tbl | sort -t\| -k2,2 >> tmp2.csv)&
+(awk -F\| 'NR==1{print $1"|"$4}' customer.csv > tmp3.csv &
+awk -F\| '{print $1"|"$4}' customer.tbl | sort -t\| -k2,2 >> tmp3.csv)&
+# supplier mit nation1 und custumer nation2
+sort -t\| -k1,1  nation.tbl | cut nation.csv - -d\| -f1,2 | awk -F\| '
+	NR==1{
+		print $0
+	}
+	NR>1 && ($2=="FRANCE"|| $2 =="GERMANY"){
+		print $0
+	}
+' > tmpnation.csv
+
+join --header -t\| -1 2 -2 1 tmp2.csv tmpnation.csv > suppnation.csv 
+join --header -t\| -1 2 -2 1 tmp3.csv tmpnation.csv > custnation.csv 
+
+#s_suppkey=l_suppkey
+#l_shipdate between 95-01-01 and 96-12-31
+#l-orderkey, l-supkey, l_shipdate, volume
+(cut lineitem.csv -d\| -f1,3,6,7,11 > tmp1.csv &
+cat lineitem.tbl | awk -F\| '
+	$11>="1995-01-01" && $11 <="1996-12-31"{
+		print $1,$3,$6,$7,$11
+	}
+' OFS=\| | sort -t\| -k2,2  >> tmp1.csv)&
+head -1 suppnation.csv > tmp2.csv &
+tail -n+1 suppnation.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 2 -2 2 tmp1.csv - > join1.csv
+
+#orders.csv mit join1: o_orderkey = l_orderkey
+(head -1 join1.csv > tmp1.csv &
+tail -n+1 join1.csv | sort -t\| -k2,2 >> tmp1.csv)&
+cut -d\| -f1,2 orders.csv > tmp2.csv &
+sort -t\| -k1,1 orders.tbl | cut -d\| -f1,2 | cat tmp2.csv - |\
+join --header -t\| -1 1 -2 2 - tmp1.csv > join2.csv
+# o_custkey=c_custkey| join aus s,n1,l,o zu join aus c,n2
+(head -1 custnation.csv > tmp1.csv &
+tail -n+1 custnation.csv | sort -t\| -k2,2 >> tmp1.csv)&
+head -1 join2.csv > tmp2.csv &
+tail -n+1 join2.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 2 -2 2 tmp1.csv - | awk -F\| '
+	NR==1{
+		print "supp_nation", "cust_nation", "l_year", "revenue"$6$7
+	}
+	NR>1 && (($10=="FRANCE" && $3 =="GERMANY")||($3=="FRANCE" && $10 =="GERMANY")){
+		print $10, $3, substr($8,1,4), $6*(1.0-$7)
+	}
+' OFS=\| > join3.csv
+
+head -1 join3.csv > tmp1.csv &
+tail -n+2 join3.csv  | sort | cat tmp1.csv - | awk -F\| '
+	NR==1{print $1,$2,$3, "sum("$4")"}
+	NR==2{g1=$1; g2=$2; g3=$3; sum=$4}
+	NR>2{
+		if( g1==$1 && g2==$2 && g3==$3 ){
+			sum+=$4
+		}else{
+			print g1,g2,g3,sum;
+			g1=$1; g2=$2; g3=$3; sum=$4;
+		}
+	}
+	END{print g1,g2,g3,sum}
+' OFS=\|
+
+rm tmp{1,2,3}.csv custnation.csv suppnation.csv join1.csv join2.csv tmpnation.csv join3.csv

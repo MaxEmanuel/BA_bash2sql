@@ -1,0 +1,12 @@
+#!/bin/bash
+# 2014-08-31
+cat part.tbl | awk -F\| ' $2 ~/asdf/ { print $1 } '
+awk -F\| ' $2~/forest/ {print $1,$2}' part.tbl  
+awk -F\| ' $2 == "forest" {print $1}' part.tbl  
+awk -F\| ' $2 <= "forest" {print $1}' part.tbl  
+awk -F\| ' $2 >= "forest" {print $1}' part.tbl  
+awk -F\| ' $2 < "forest" {print $1}' part.tbl  
+awk -F\| ' $2 > "forest" {print $1}' part.tbl  
+awk -F\| ' $2 > $3 {print $1}' part.tbl  
+awk -F\| ' $2 >= $3 {print $1}' part.tbl  
+awk -F\| ' $2 != $3 {print $1}' part.tbl  

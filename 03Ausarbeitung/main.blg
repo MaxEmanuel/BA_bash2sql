@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2012/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: main.aux
+The style file: plain.bst
+Database file #1: bibliography/literature.bib
+Warning--to sort, need author, editor, or key in IBM_Fortran
+Warning--empty author and editor in IBM_Fortran
+You've used 17 entries,
+            2118 wiz_defined-function locations,
+            591 strings with 5959 characters,
+and the built_in function-call counts, 3600 in all, are:
+= -- 325
+> -- 113
+< -- 0
++ -- 51
+- -- 32
+* -- 129
+:= -- 623
+add.period$ -- 50
+call.type$ -- 17
+change.case$ -- 56
+chr.to.int$ -- 0
+cite$ -- 19
+duplicate$ -- 175
+empty$ -- 377
+format.name$ -- 32
+if$ -- 778
+int.to.chr$ -- 0
+int.to.str$ -- 17
+missing$ -- 21
+newline$ -- 87
+num.names$ -- 32
+pop$ -- 135
+preamble$ -- 1
+purify$ -- 50
+quote$ -- 0
+skip$ -- 107
+stack$ -- 0
+substring$ -- 87
+swap$ -- 17
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 46
+warning$ -- 2
+while$ -- 32
+width$ -- 19
+write$ -- 170
+(There were 2 warnings)

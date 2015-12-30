@@ -1,0 +1,19 @@
+#!/bin/bash
+# P >< L (partkey)
+
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print $2 ";revenue"
+	}
+	NR>1 && $11>="1995-09-01" && $11<"1995-10-01"{
+		suma=($6*(1.0-$7))*100;
+		print $2 ";" suma
+	}
+' > tmpline.csv
+
+head -1 tmpline.csv > tmp1.csv
+tail -n+2 tmpline.csv | sort -t\; -k1 >> tmp1.csv
+cut -d\; -f1,5 part.csv |\
+join --header -t\; -1 1 -2 1 - tmp1.csv | tee join.csv |\
+sed -r 's/(;PROMO.*;).*/\10/'| datamash -H -s -t\; sum 3
+rm tmp*.csv join.csv

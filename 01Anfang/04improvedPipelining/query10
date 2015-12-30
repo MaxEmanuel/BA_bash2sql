@@ -1,0 +1,45 @@
+#!/bin/bash
+#2014-08-28
+# ((O >< C) >< N) >< L
+# O >< C (custkey)
+awk -F\| ' $5>="1993-10-01" && $5<"1994-01-01"{print $1 "|" $2} 
+' orders.tbl | sort -t\| -k2,2 | cut -d\| -f1,2 orders.csv -  > tmp1.csv
+cut -d\| -f1-8 customer.tbl | sort -t\| -k1,1 | cut -d\| -f1-6,8 customer.csv - |\
+join --header -t\| -1 2 -2 1 tmp1.csv - > join1.csv
+
+# >< N (nationkey)
+head -1 join1.csv > tmp1.csv
+tail -n+2 join1.csv | sort -t\| -k5,5 >> tmp1.csv
+cut -d\| -f1,2 nation.tbl | sort -t\| -k1,1 | cut -d\| -f1,2 nation.csv - |\
+join --header -t\| -1 5 -2 1 tmp1.csv - > join2.csv
+
+# >< L (orderkey)
+head -1 join2.csv > tmp1.csv
+tail -n+2 join2.csv | sort -t\| -k3,3 >> tmp1.csv 
+cut -d\| -f1,6,7 lineitem.csv > tmp2.csv
+awk -F\| '$9=="R"{print $1,$6,$7}' OFS=\| lineitem.tbl | sort -t\| -k1,1 | cat tmp2.csv - |\
+join --header -t\| -1 3 -2 1 tmp1.csv - > join3.csv
+
+# group by, sum(revenue)
+#c_custkey,c_name,c_acctbal,c_phone,n_name,c_address,c_comment
+#sum(l_extendedprice * (1 - l_discount)) as revenue
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv  | sort -r -t\| -k3,9 | cat tmp1.csv - | awk -F\| '
+	NR==1{print $3, $4, $7, $6, $9, $5, $8, "sum(revenue)"}
+	NR==2{g3=$3;g4=$4;g7=$7;g6=$6;g2=$2;g5=$5;g8=$8;sum=$10*(1.0-$11)}
+	NR>2{
+		if(g3==$3 && g4==$4 && g7==$7 && g6==$6 && 
+			g9==$9 && g5==$5 && g8==$8){
+			sum+=$10*(1.0-$11)
+		}else{
+			print g3, g4, g7, g6, g9, g5, g8, sum;
+			g3=$3;g4=$4;g7=$7;g6=$6;g9=$9;g5=$5;g8=$8;sum=$10*(1.0-$11);
+		}
+	}
+	END{print g3, g4, g7, g6, g9, g5, g8, sum}
+' OFS=\| > tmp.csv
+
+head -1 tmp.csv;
+tail -n+2 tmp.csv | sort -t\| -nrk8 | head -20
+
+rm tmp*.csv join{1,2,3}.csv

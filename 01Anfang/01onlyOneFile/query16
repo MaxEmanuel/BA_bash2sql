@@ -1,0 +1,23 @@
+#!/bin/bash
+## N >< S
+#  $4  p_brand <> 'Brand#45'
+#  $5      and p_type not like 'MEDIUM POLISHED%'
+#  $6      and p_size in (49, 14, 23, 45, 19, 3, 36, 9)
+awk -F\; '
+	NR==1{
+		print $1,$4,$5,$6
+	}
+	NR>1 && $4!="Brand#45" && $5!~/^MEDIUM POLISHED.*/ && ($6==49 || $6==14 || $6==23 || $6==45 || $6==19 || $6==3 || $6==36 || $6==9){
+		print $1,$4,$5,$6
+	}
+' OFS=\; part.csv | tee tmppart.csv |\
+join --header -t\; -1 1 -2 1 partsupp.csv - > join1.csv
+
+# PS |> S (suppkey)
+head -1 join1.csv | cut -d\; -f1,2,6,7,8 > tmp1.csv
+tail -n+2 join1.csv |  cut -d\; -f1,2,6,7,8 | sort -t\; -k2,2 >> tmp1.csv
+sed -r '/;.*;.*;.*;.*;.*;.*Customer.*Complaints/ d' supplier.csv | cut -d\; -f1 |\
+join --header -t\; -1 2 -2 1 tmp1.csv - | tee join2.csv |\
+datamash -H -s -t\; -g3,4,5 count 1
+
+rm tmp*.csv join1.csv join2.csv

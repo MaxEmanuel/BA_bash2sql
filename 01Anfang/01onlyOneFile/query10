@@ -1,0 +1,35 @@
+#!/bin/bash
+## N >< C >< O >< L
+# O >< L (orderkey)
+cat orders.csv | awk -F\; '
+	NR==1{
+		print $1 ";" $2
+	}
+	NR>1 && $5>="1993-10-01"&& $5<"1994-01-01"{
+		print $1 ";" $2
+	}
+' > tmporder.csv
+
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print $1 ";revenue"
+	}
+	NR>1 && $9=="R"{
+		suma=($6*(1.0-$7));
+		print $1 ";" suma
+	}
+' > tmpline.csv
+
+join --header -t\; -1 1 -2 1 tmporder.csv tmpline.csv > tmplo.csv
+
+# C >< (custkey)
+head -1 tmplo.csv > tmp1.csv
+tail -n+2 tmplo.csv | sort -t\; -k2 >> tmp1.csv
+join --header -t\; -1 1 -2 2 customer.csv tmp1.csv > join1.csv
+
+# N >< (nationkey)
+head -1 join1.csv > tmp2.csv
+tail -n+2 join1.csv | sort -t\; -k4 >> tmp2.csv
+cut -d\; -f1,2 nation.csv | join --header -t\; -1 1 -2 4 - tmp2.csv | tee join2.csv |\
+head -10 | tr '.' ','| datamash -H -s -t\; -g3,4,7,6,2,5,8 sum 11 | sort -t\; -k8 -r
+rm tmp*.csv join1.csv join2.csv

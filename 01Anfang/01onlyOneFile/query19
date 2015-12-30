@@ -1,0 +1,40 @@
+#!/bin/bash
+#l_shipmode in ('AIR', 'AIR REG')and l_shipinstruct = 'DELIVER IN PERSON'
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print $2 ";" $5";revenue"
+	}
+	NR>1 && $14=="DELIVER IN PERSON" && ($15=="AIR" || $15=="AIR REG"){
+		suma=($6*(1.0-$7));
+		print $2 ";" $5";" suma
+	}
+' > tmpline.csv
+
+# P >< L (partkey)
+head -1 tmpline.csv > tmp1.csv
+tail -n+2 tmpline.csv| sort -t\; -k1,1 >> tmp1.csv
+join --header -t\; -1 1 -2 1 tmp1.csv part.csv |awk -F\; '
+	NR==1{ print "revenue"; sum=0}
+	$6=="Brand#12" &&
+	($9=="SM CASE" || $9=="SM BOX" || $9=="SM PACK") &&
+	$2>=1 && $2<=11 &&
+	$8<=10&&$8>=1{
+		sum+=$3
+	}
+	$6=="Brand#23" &&
+	($9=="MED BAG" || $9=="MED BOX" || $9=="MED PKG") && 
+	$2>=10 && $2<=20 &&
+	$8<=10 && $8>=1{
+		sum+=$3
+	}
+	$6=="Brand#34" &&
+	($9=="LG CASE" || $9=="LG BOX" || $9=="LG PACK" || $9=="LG PKG") && 
+	$2>=20 && $2<=30 &&
+	$8<=10 && $8>=1{
+		sum+=$3
+	}
+	END{print sum}
+'
+# and p_brand = 'Brand#12' and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l_quantity >= 1 and l_quantity <= 1 + 10
+#  and p_brand = 'Brand#23'and p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') and l_quantity >= 10 and l_quantity <= 10 + 10and p_size between 1 and 10
+#and p_brand = 'Brand#34' and p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG' and l_quantity >= 20 and l_quantity <= 20 + 10and p_size between 1 and 15

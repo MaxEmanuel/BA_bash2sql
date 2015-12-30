@@ -1,0 +1,18 @@
+#!/bin/bash
+#revenue.csv
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print "supplier_no;total_revenue"
+	}
+	NR>1 && $11>="1996-01-01" && $11<"1996-04-01"{
+		suma=($6*(1.0-$7));
+		print $3 ";" suma
+	}
+' | tr '.,' ',.' | datamash -s -H -t\; -g1 sum 2 > revenue.csv
+max=`datamash -H -t\; max 2 < revenue.csv | tail -n+2`
+# S >< revenue.csv
+head -1 revenue.csv > tmp1.csv
+grep ";$max" revenue.csv >> tmp1.csv
+cut -d\; -f1,2,3,5 supplier.csv |\
+join --header -t\; -1 1 -2 1 - tmp1.csv
+rm tmp1.csv revenue.csv

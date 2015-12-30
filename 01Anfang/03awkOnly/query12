@@ -1,0 +1,51 @@
+#!/bin/bash
+## N >< C >< O >< L
+# O >< L (orderkey)
+ #       o_orderkey = l_orderkey
+  #$15      and l_shipmode in ('MAIL', 'SHIP')
+   # $12<$13   and l_commitdate < l_receiptdate
+    # $11<12    and l_shipdate < l_commitdate
+     # $13  and l_receiptdate >= date '1994-01-01'
+      # $13  and l_receiptdate < date '1995-01-01'
+sort -t\| -k1,1 orders.tbl|\
+cat orders.csv - | awk -F\| '
+	NR==1{
+		print $1 "|high_line_count|low_line_count"
+	}
+	NR>1{
+		if ( $6=="1-URGENT"||$6=="2-HIGH" )
+		  print $1 "|1|0"
+		else
+		  print $1 "|0|1"
+	}
+' > tmporder.csv
+
+sort -t\| -k1,1 lineitem.tbl |\
+cat lineitem.csv - | awk -F\| '
+	NR==1{
+		print $1 "|" $15
+	}
+	NR>1 && $13>="1994-01-01" && $13<"1995-01-01" && $12<$13 && $11<$12 && ($15=="MAIL" || $15=="SHIP"){
+		print $1 "|" $15
+	}
+' > tmpline.csv
+
+join --header -t\| -1 1 -2 1 tmporder.csv tmpline.csv > join.csv
+
+#group by shipmode ($4), sum highline, lowline
+head -1 join.csv > tmp1.csv
+tail -n+2 join.csv  | sort -t\| -k4,4 | cat tmp1.csv - | awk -F\| '
+	NR==1{print $4,"high_line_count", "low_line_count"}
+	NR==2{g4=$4;sumhigh=$2;sumlow=$3}
+	NR>2{
+		if(g4==$4){
+			sumlow+=$3; sumhigh+=$2
+		}else{
+			print g4, sumhigh, sumlow;
+			g4=$4;sumhigh=$2;sumlow=$3;
+		}
+	}
+	END{print g4, sumhigh, sumlow}
+' OFS=\|
+
+rm tmp*.csv

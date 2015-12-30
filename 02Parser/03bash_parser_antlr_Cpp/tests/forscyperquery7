@@ -1,0 +1,64 @@
+#!/bin/bash
+# supplier mit nation1 und custumer nation2
+sort -t\| -k1,1  nation.tbl | cut nation.csv - -d\| -f1,2 | awk -F\| '
+	NR==1{
+		print $0
+	}
+	NR>1 && ($2=="FRANCE"|| $2 =="GERMANY"){
+		print $0
+	}
+' > tmpnation.csv
+#header
+awk -F\| 'NR==1{print $1"|"$4}' supplier.csv > tmp2.csv
+awk -F\| 'NR==1{print $1"|"$4}' customer.csv > tmp3.csv
+#rest
+awk -F\| '{print $1"|"$4}' supplier.tbl | sort -t\| -k2,2 >> tmp2.csv
+awk -F\| '{print $1"|"$4}' customer.tbl | sort -t\| -k2,2 >> tmp3.csv
+join --header -t\| -1 2 -2 1 tmp2.csv tmpnation.csv > suppnation.csv
+join --header -t\| -1 2 -2 1 tmp3.csv tmpnation.csv > custnation.csv
+
+#s_suppkey=l_suppkey
+#l_shipdate between 95-01-01 and 96-12-31
+#l-orderkey, l-supkey, l_shipdate, volume
+cat lineitem.* | awk -F\| '
+	NR==1{
+		print $1 "|" $3 "|" $11 "|volume"
+	}
+	NR>1 && $11>="1995-01-01" && $11 <="1996-12-31"{
+		suma=($6*(1.0-$7));
+		print $1 "|" $3 "|" $11 "|" suma
+	}
+' > tmpline.csv
+head -1 tmpline.csv > tmp1.csv
+tail -n+1 tmpline.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1 suppnation.csv > tmp2.csv
+tail -n+1 suppnation.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv  tmp2.csv > join1.csv
+
+
+#orders.csv mit join1: o_orderkey = l_orderkey
+head -1 join1.csv > tmp1.csv
+tail -n+1 join1.csv | sort -t\| -k2,2 >> tmp1.csv
+cut -d\| -f1,2 orders.csv > tmp2.csv
+sort -t\| -k1,1 orders.tbl | cut -d\| -f1,2 >> tmp2.csv
+join --header -t\| -1 1 -2 2 tmp2.csv tmp1.csv > join2.csv
+
+# o_custkey=c_custkey| join aus s,n1,l,o zu join aus c,n2
+head -1 custnation.csv > tmp1.csv
+tail -n+1 custnation.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1 join2.csv > tmp2.csv
+tail -n+1 join2.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv  tmp2.csv | awk -F\| '
+	NR==1{
+		print "supp_nation", "cust_nation", "l_year", "revenue"
+	}
+	NR>1 && (($9=="FRANCE" && $3 =="GERMANY")||($3=="FRANCE" && $9 =="GERMANY")){
+		print $9, $3, substr($6,1,4), $7
+	}
+' OFS=\| > join3.csv 
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv | sort -t\| -k1,3 | cat tmp1.csv - |\
+#tr '.,' ',.'|\
+datamash -H -t\| -g1,2,3  sum 4
+
+rm tmpline.csv tmp1.csv tmp2.csv custnation.csv suppnation.csv join1.csv join2.csv join3.csv

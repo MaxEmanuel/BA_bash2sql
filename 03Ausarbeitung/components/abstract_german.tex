@@ -1,0 +1,29 @@
+% Included by MAIN.TEX
+
+
+\clearemptydoublepage
+
+
+
+
+
+
+\vspace*{2cm}
+\begin{center}
+{\Large \bf Zusammenfassung}
+\end{center}
+\vspace{1cm}
+
+Diese Arbeit beschäftigt sich mit Bash-Skripten, die tabellenähnliche CSV-Dateien auslesen, im Vergleich zu ihnen äquivalenten SQL-Abfragen, die auf relationalen Datenbanken arbeiten.\\
+
+Wissenschaftliche Daten werden oft in textbasierten Formaten, etwa CSV, gespeichert, die meist mit Unix Werkzeugen analysiert werden. Oft sind diese in unverständliche Bash-Skripte verpackt, deren Ausführung viel Zeit in Anspruch nimmt.\\
+
+Der Flaschenhals von Datenbanken ist das Laden der Daten, neue Technologien erlauben das Laden quasi in Echtzeit. Zudem erleichtern Datenbanken die Datenaufbereitung mittels einer leicht verständlichen Abfragesprache, die bei der Datenanalyse auch genutzt werden sollte. Daher untersucht diese Arbeit wie die Datenverarbeitung in der Wissenschaft durch den geeigneten Einsatz von relationalen Datenbanksystemen verbessert werden kann.\\
+
+Hierbei problematisch ist die Portierung der Bash Skripte auf ein Datenbanksystem, denn müssen diese Analysen neu geschrieben werden, so ist ein Umstieg wenig reizvoll. Ein Compiler, der die Skripte automatisiert in SQL übersetzt, soll das ändern, weshalb diese Arbeit verfolgt, wie Skripte in äquivalente SQL-Abfragen übersetzt werden.\\
+
+Zuerst wird der Geschwindigkeitsnachteil von Bash-Skripten anhand des TPC-H Benchmarks für analytische Anfragen verdeutlicht. Dazu werden die Anfragen mit Unix-Werk\-zeu\-gen implementiert und Laufzeiten von bis zu 15 Minuten pro Abfrage auf 10\ GB großen Daten gemessen.\\
+
+Um bestehende Analysen aus Bash-Skripten im Einsatz mit relationalen Da\-ten\-bank\-sys\-te\-men weiterhin nutzen zu können, wird die Idee eines Konverters zu SQL betrachtet, der Skripte automatisiert in SQL transferiert.
+Der entwickelte Bash2SQL-Compiler übersetzt jedes Kommando in eine SQL-Abfrage und verschachtelt über eine Pipeline verbundene Kommandos, sodass am Ende ein gültiger SQL-Ausdruck entsteht, eventuell eingebunden mittels eines SQL-Kommandos in ein Bash-Skript.
+

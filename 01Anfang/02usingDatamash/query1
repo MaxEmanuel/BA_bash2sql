@@ -1,0 +1,12 @@
+#!/bin/bash
+#2014-08-18
+cat lineitem.* | awk -F\| '
+	NR==1{
+		print $0 "sum_disc|sum_charge|"
+	}
+	NR>1 && $11<="1998-9-2"{
+		suma=($6*(1.0-$7));
+		sumb=($6*(1.0-$7)*(1.0+$8));
+		print $0 suma "|" sumb "|"
+	}
+'| tee tmp.csv | tr '.,' ',.' | datamash --sort -t\| -H -g9,10 sum 5 sum 6 sum 17 sum 18 mean 5 mean 6 mean 7 count 1

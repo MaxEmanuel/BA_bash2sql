@@ -1,0 +1,14 @@
+#!/bin/bash
+# C |>< O
+# left outer join ^= join -a1 -a2 -1 2 -2 2 -o 0 1.1 2.1 -e "0" 1.txt 2.txt
+#join -a1 -a2 -1 2 -2 2 -o 0 1.1 -e "0" 1.txt 2.txt
+cut -d\| -f1,2 customer.csv > tmp1.csv
+cut -d\| -f1,2 customer.tbl | sort -t\| -k1,1 >> tmp1.csv
+head -1 orders.csv | cut -d\| -f2 > tmp2.csv
+cat orders.tbl |grep -v 'special.*requests' | cut -d\| -f2 | sort >> tmp2.csv
+join --header -t\| -1 1 -2 1 -a1 -o 0 2.1 -e "NULL" tmp1.csv tmp2.csv | tee join.csv |\
+sed  's/|[0-9][0-9]*/|1/' | sed  's/|NULL/|0/' | datamash -H -s -t\| -g1 sum 2 |  datamash -H -s -t\| -g2 count 1 > tmp.csv
+
+head -1 tmp.csv; tail -n+2 tmp.csv | sort -nr | sort -nrk2,2 -t\|
+
+rm tmp*.csv join.csv

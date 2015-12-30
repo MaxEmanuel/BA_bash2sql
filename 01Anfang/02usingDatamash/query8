@@ -1,0 +1,90 @@
+#!/bin/bash
+## O >< C >< N1 >< R
+# N1 >< R (regionkey)
+head -1 region.csv | cut -d\| -f1 > tmpregion.csv
+grep '|AMERICA|' region.tbl | cut -d\| -f1 | sort >> tmpregion.csv
+head -1 nation.csv | cut -d\| -f1,3 > tmpnation.csv
+cat nation.tbl | cut -d\| -f1,3 | sort -t\| -k2,2 >> tmpnation.csv
+join --header -t\| -1 1 -2 2 tmpregion.csv tmpnation.csv > tmpnr.csv
+
+# C >< (nationkey)
+head -1 customer.csv | cut -d\| -f1,4 > tmp1.csv
+cat customer.tbl | cut -d\| -f1,4 | sort -t\| -k2,2 >> tmp1.csv
+head -1 tmpnr.csv > tmp2.csv
+tail -n+2 tmpnr.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv tmp2.csv > tmpocn1r.csv
+
+# O >< (custkey)
+cat orders.* | awk -F\| '
+	NR==1{
+		print $1 "|" $2 "|year"
+	}
+	NR>1 && ( $5>="1995-01-01" && $5<="1996-12-31"){
+		print $1 "|" $2 "|" substr($5,1,4)
+	}
+' > tmporder.csv
+head -1 tmporder.csv  > tmp1.csv
+tail -n+2 tmporder.csv  | sort -t\| -k2,2  >> tmp1.csv
+head -1 tmpocn1r.csv > tmp2.csv
+tail -n+2 tmpocn1r.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv tmp2.csv > join1.csv
+
+## P >< L >< S >< N2 (nationkey)
+# S >< N2
+head -1 supplier.csv | cut -d\| -f1,4 > tmp2.csv
+cat supplier.tbl | cut -d\| -f1,4 | sort -t\| -k2,2 >> tmp2.csv
+cut -d\| -f1,2 nation.csv > tmp1.csv
+cut -d\| -f1,2 nation.tbl | sort -t\| -k1,1 >> tmp1.csv
+join --header -t\| -1 1 -2 2 tmp1.csv tmp2.csv > tmpsn.csv
+
+# L >< P (partkey)
+cat lineitem.* | awk -F\| '
+	NR==1{
+		print $1 "|" $2 "|" $3 "|volume"
+	}
+	NR>1 && $11>="1995-01-01" && $11<"1996-12-31"{
+		suma=($6*(1.0-$7))
+		print $1 "|" $2 "|" $3 "|" suma
+	}
+' > tmpline.csv
+head -1 tmpline.csv > tmp1.csv
+tail -n+2 tmpline.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1 part.csv | cut -d\| -f1 > tmp2.csv
+cat part.tbl | grep 'ECONOMY ANODIZED STEEL'| cut -d\| -f1 | sort >> tmp2.csv
+join --header -t\| -1 2 -2 1 tmp1.csv tmp2.csv > join2.csv
+
+# L >< O... (orderkey)
+head -1 join2.csv > tmp1.csv
+tail -n+2 join2.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1 join1.csv > tmp2.csv
+tail -n+2 join1.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv tmp2.csv > join3.csv
+
+# L >< S (suppkey)
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv | sort -t\| -k3,3 >> tmp1.csv
+head -1 tmpsn.csv > tmp2.csv
+tail -n+2 tmpsn.csv | sort -t\| -k3,3 >> tmp2.csv
+join --header -t\| -1 3 -2 3 tmp1.csv tmp2.csv > output.csv
+
+
+cat output.csv | tr ',.' '.,' | datamash -H -s -t\| -g6,10  sum 4 | awk  -F\| '
+	NR==1{
+		print $0 "|volume_g"
+	}
+	NR>1 && $2=="BRAZIL"{
+		print $0 "|" $3
+	}
+	NR>1 && $2!="BRAZIL"{
+		print $0 "|" 0
+	}
+' | datamash -H -s -t\| -g1 sum 3 sum 4 | awk  -F\| '
+	NR==1{
+		"o_year|mkt_share"
+	}
+	NR>1{
+		print $1 "|" $3/$2
+	}
+'
+
+rm tmp*.csv join1.csv join2.csv output.csv

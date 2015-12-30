@@ -1,0 +1,46 @@
+#!/bin/bash
+#2014-08-26
+mkfifo tmporder.csv tmp1.csv tmp2.csv
+(sort -t\| -k1,1 orders.tbl | cat orders.csv - | awk -F\| '
+	NR==1{
+		print $1, $2, $5, $8
+	}
+	NR>1 && $5<"1995-03-15"{
+		print $1, $2, $5, $8
+	}
+' OFS=\| > tmporder.csv)&
+
+cat lineitem.tbl | sort -t\| -k1,1 | cat lineitem.csv - | awk -F\| '
+	NR==1{
+		print $1,$6,$7
+	}
+	NR>1 && $11>"1995-03-15"{
+		print $1,$6,$7
+	}
+' OFS=\| |\
+join --header -t\| -1 1 -2 1 tmporder.csv - > tmplo.csv
+
+# >< customer (custkey)
+head -1 tmplo.csv > tmp1.csv &
+cat customer.csv > tmp2.csv &
+tail -n+2 tmplo.csv | sort -t\| -k2,2 >> tmp1.csv &
+grep BUILDING customer.tbl | sort -t \| -k1,1 | cat tmp2.csv - |\
+join --header -t\| -1 2 -2 1 -o 1.1 1.5 1.6 1.3 1.4 tmp1.csv - > output.csv
+
+# gruppieren und sortieren
+head -1 output.csv > tmp1.csv &
+tail -n+2 output.csv  | sort -t\| -k4,5 | sort -s -t\| -k1,1 | cat tmp1.csv -  | awk -F\| '
+	NR==1{print $1,"sum(revenue)", $4, $5}
+	NR==2{g1=$1; g4=$4; g5=$5; sum=($2*(1.0-$3))}
+	NR>2{
+		if( g1==$1 &&  g4==$4 && g5==$5 ){
+			sum+=($2*(1.0-$3))
+		}else{
+			print g1, sum, g4, g5;
+			g1=$1; g4=$4; g5=$5; sum=($2*(1.0-$3))
+		}
+	}
+	END{print g1, sum, g4, g5}
+' OFS=\| > tmp3.csv
+head -1 tmp3.csv; tail -n+2 tmp3.csv | sort -t\| -k3,3 | sort -s -t\| -k2,2 -nr | head -10
+rm tmp*.csv output.csv

@@ -1,0 +1,77 @@
+#!/bin/bash
+#2014-08-28
+# (R >< N1) >< ((P >< L) >< O >< C)
+# >< S
+# >< N2
+
+# N1 >< R (regionkey)
+head -1 region.csv | cut -d\| -f1 > tmpregion.csv
+grep '|AMERICA|' region.tbl | cut -d\| -f1 | sort >> tmpregion.csv
+cut -d\| -f1-3 nation.tbl | sort -t\| -k3,3 | cut nation.csv - -d\| -f1,3 | tee tmpnation.csv |\
+join --header -t\| -1 1 -2 2 tmpregion.csv - > tmpnr.csv
+
+# P >< L (partkey)
+cat lineitem.tbl | sort -t\| -k2,2 | cut -d\| -f1,2,3,6,7 lineitem.csv - > tmp1.csv
+cat part.tbl | grep 'ECONOMY ANODIZED STEEL'| cut -d\| -f1 | sort | cut part.csv - -d\| -f1 |\
+join --header -t\| -1 2 -2 1 tmp1.csv - > join2.csv
+
+# >< O (orderkey)
+head -1 join2.csv > tmp1.csv
+tail -n+2 join2.csv | sort -t\| -k2,2 >> tmp1.csv 
+cut orders.tbl -d\| -f1-5 | sort -t\| -k1,1 | cat orders.csv - | awk -F\| '
+	NR==1 || ( $5>="1995-01-01" && $5<="1996-12-31"){
+		print $1 "|" $2 "|" $5
+	}
+' |\
+join --header -t\| -1 2 -2 1 tmp1.csv - > join3.csv
+
+# >< C (custkey)
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv | sort -t\| -k6,6 >> tmp1.csv 
+cut -d\| -f1-4 customer.tbl | sort -t\| -k1,1 | cut -d\| -f1,4 customer.csv - |\
+join --header -t\| -1 6 -2 1 tmp1.csv - > join4.csv
+
+# (N1><R) >< (nationkey)
+head -1 join4.csv > tmp1.csv
+tail -n+2 join4.csv | sort -t\| -k8,8 >> tmp1.csv
+head -1 tmpnr.csv > tmp2.csv
+tail -n+2 tmpnr.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 8 -2 2 tmp1.csv - > join5.csv
+
+# >< S (suppkey)
+head -1 join5.csv > tmp1.csv
+tail -n+2 join5.csv | sort -t\| -k5,5 >> tmp1.csv
+cut -d\| -f1-4 supplier.tbl | sort -t\| -k1,1 | cut -d\| -f1-4 supplier.csv - |\
+join --header -t\| -1 5 -2 1 tmp1.csv - > join6.csv
+
+# >< N2 (s_nationkey==n2_nationkey)
+head -1 join6.csv > tmp1.csv
+tail -n+2 join6.csv | sort -t\| -k12,12 >> tmp1.csv
+cut -d\| -f1,2 nation.tbl | sort -t\| -k1,1 | cut nation.csv - -d\| -f1,2 |\
+join --header -t\| -1 12 -2 1 tmp1.csv - |\
+
+#extract(year from o_orderdate) as o_year,
+#l_extendedprice * (1 - l_discount) as volume,
+awk -F\| '
+	NR==1{print "nation|year|volume"}
+	NR>1{print $13,substr($9,1,4),$7*(1.0-$8) }
+' OFS=\| > join7.csv
+
+#group by $2 year; 10: $1 nation; $3 volume
+head -1 join7.csv > tmp1.csv
+tail -n+2 join7.csv  | sort -t\| -k2,2 | cat tmp1.csv - | awk -F\| '
+	NR==1{print $2,"mkt_share"}
+	NR==2{g2=$2; sumt=$3; sumb=0}
+	NR>2{
+		if(g2==$2){
+			sumt+=$3
+		}else{
+			print g2,sumb/sumt;
+			g2=$2; sumt=$3; sumb=0;
+		}
+	}
+	$1=="BRAZIL"{sumb+=$3}
+	END{print g2, sumb/sumt}
+' OFS=\|
+
+rm tmp*.csv join{2,3,4,5,6,7}.csv

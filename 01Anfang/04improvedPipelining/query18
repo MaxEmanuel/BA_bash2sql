@@ -1,0 +1,31 @@
+#!/bin/bash
+# 2014-08-20
+# group by l_orderkey, having sum quantity >300
+cut -d\| -f1-5 lineitem.tbl | sort -t\| -k1,1| cut -d\| -f1,5 lineitem.csv - | awk -F\| '
+	NR==1{print $1,"sum("$2")"}
+	NR==2{g1=$1;sum=$2}
+	NR>2{
+		if(g1==$1){
+			sum+=$2;
+		}else{
+			if(sum>300)
+				print g1,sum;
+			g1=$1; sum=$2;
+		}
+	}
+	END{print g1,sum}
+' OFS=\| >  tmp2.csv
+# O >< L (orderkey)
+sort -t\| -k1,1 orders.tbl | cut -d\| -f1-9 orders.csv - |\
+join --header -t\| -1 1 -2 1 - tmp2.csv > join1.csv
+# >< C (custkey)
+#c_name,c_custkey,o_orderkey,o_orderdate,o_totalprice
+head -1 join1.csv | cut -d\| -f1,2,4,5,10 > tmp2.csv
+tail -n+2 join1.csv | cut -d\| -f1,2,4,5,10 | sort -t\| -k2,2 >> tmp2.csv
+sort -t\| -k1,1 customer.tbl | cut -f1,2 customer.csv - |\
+join --header -t\| -1 1 -2 2 -o 1.2 0 2.1 2.4 2.3 2.5 - tmp2.csv > join2.csv
+
+head -1 join2.csv
+tail -n+2 join2.csv | sort -t\| -k6 | sort -t\| -k5,5 -sr | head -100
+
+rm tmp2.csv join1.csv join2.csv

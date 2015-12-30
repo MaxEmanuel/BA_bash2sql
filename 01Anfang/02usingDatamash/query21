@@ -1,0 +1,45 @@
+#!/bin/bash
+## N >< S >< L1 >< O |> L
+echo ' N >< S' 1>&2
+cut -d\| -f1,2,4 supplier.csv > tmp1.csv
+cut -d\| -f1,2,4 supplier.tbl | sort -t\| -k3,3 >> tmp1.csv
+cut -d\| -f1 nation.csv > tmp2.csv
+cat nation.tbl | grep 'SAUDI ARABIA' | cut -d\| -f1 >> tmp2.csv
+join --header -t\| -1 3 -2 1 tmp1.csv tmp2.csv > tmpsn.csv
+
+echo ' >< L1 (suppkey)' 1>&2
+#l1.l_receiptdate > l1.l_commitdate
+awk -F\| 'NR==1 || $13>$12 {print $1,$3}' OFS=\| lineitem.* > tmpli.csv
+head -1 tmpli.csv > tmp1.csv
+tail -n+2 tmpli.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1 tmpsn.csv > tmp2.csv
+tail -n+2 tmpsn.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 2 -2 2 tmp1.csv tmp2.csv > join2.csv
+
+echo ' >< O (orderkey)' 1>&2
+#l1.l_receiptdate > l1.l_commitdate
+head -1 orders.csv | cut -d\| -f1 > tmpA.csv
+awk -F\| 'NR>=1 && $3=="F" {print $1}' orders.tbl | sort >> tmpA.csv
+head -1 join2.csv > tmpB.csv
+tail -n+2 join2.csv | sort -t\| -k2,2 >> tmpB.csv
+join --header -t\| -1 1 -2 2 tmpA.csv tmpB.csv > join3.csv
+
+echo ' |> L3 (orderkey)' 1>&2
+#l3.l_suppkey <> l1.l_suppkey
+#awk -F\| 'NR==1 || $13>$12 {print $1,$3}' OFS=\| lineitem.csv > tmpli.csv
+head -1 tmpli.csv > tmp2.csv
+tail -n+2 tmpli.csv | sort -t\| -k1,1 >> tmp2.csv
+join --header -t\| -1 1 -2 1 join3.csv tmp2.csv |\
+ awk -F\| 'NR==1 || $2!=$5 {print $0}' |\
+join --header -t\| -1 1 -2 1 -v1 join3.csv - | cut -d\| -f1-4 > join4.csv
+
+echo ' >< L2 ( l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey)' 1>&2
+cut lineitem.* -d\| -f1,3 | datamash -H -s -t\| -g1 count 2 | awk -F\| '
+	NR==1 || $2>1 {print $1}' > tmp2.csv
+join --header -t\| -1 1 -2 1 join4.csv tmp2.csv | tee join5.csv |\
+datamash -H -s -t\| -g4 count 1 > join6.csv
+
+head -1 join6.csv
+tail -n+2 join6.csv | sort -t\| -snr -k2,2 | head -99
+
+rm tmp*.csv join*.csv

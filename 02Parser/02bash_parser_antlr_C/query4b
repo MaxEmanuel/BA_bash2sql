@@ -1,0 +1,2 @@
+mkfifo tmporder.csv
+sort -k1,1 -t, orders.tbl | cat orders.csv | awk ' $2 >= 1 { print $0 } ' 

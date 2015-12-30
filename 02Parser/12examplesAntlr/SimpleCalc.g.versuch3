@@ -1,0 +1,588 @@
+grammar SimpleCalc;
+ 
+options
+{
+    language=C;
+}
+ 
+tokens
+{
+    PLUS    = '+' ;
+    MINUS   = '-' ;
+    MULT    = '*' ;
+    DIV = '/' ;
+    PIPE = '|';
+}
+ 
+@header
+{
+#ifndef MYHEAD
+#define MYHEAD
+ 
+ #include <assert.h>
+ #include "SimpleCalcLexer.h"
+ #define MAXFIELDS 5
+
+ typedef struct myquery{
+	char select[80], from[80], where[800], groupby[20], orderby[20], as[20];
+	int felder[MAXFIELDS];
+	
+	/* findet join statt? felder 1, felder2, tabelle1, tabelle2 */
+	char join, f1[3],f2[3],t2[20];
+	/* findet union statt?  */
+	char sqlunion;
+	struct myquery *src, *src2;
+  } query;
+
+
+#endif
+}
+
+@members
+{
+	query *lastquery=NULL;
+	
+/*------------------------------------------------------------------
+ * Methoden fuer die SQL-Abfrage
+ *------------------------------------------------------------------*/
+	/*str_split fuer die lookup der Spaltenbezeichner*/
+	char** str_split(char* a_str, const char a_delim)
+	{
+	    char** result    = 0;
+	    size_t count     = 0;
+	    char* tmp        = a_str;
+	    char* last_comma = 0;
+	    char delim[2];
+	    delim[0] = a_delim;
+	    delim[1] = 0;
+
+	    /* Count how many elements will be extracted. */
+	    while (*tmp)
+	    {
+		if (a_delim == *tmp)
+		{
+		    count++;
+		    last_comma = tmp;
+		}
+		tmp++;
+	    }
+
+	    /* Add space for trailing token. */
+	    count += last_comma < (a_str + strlen(a_str) - 1);
+
+	    /* Add space for terminating null string so caller
+	       knows where the list of returned strings ends. */
+	    count++;
+
+	    result = malloc(sizeof(char*) * count);
+
+	    if (result)
+	    {
+		size_t idx  = 0;
+		char* token = strtok(a_str, delim);
+
+		while (token)
+		{
+		    assert(idx < count);
+		    *(result + idx++) = strdup(token);
+		    token = strtok(0, delim);
+		}
+		assert(idx == count - 1);
+		*(result + idx) = 0;
+	    }
+
+	    return result;
+	}
+		
+	/*nimmt die erste Zeile einer Datei als Spaltenbezeichner*/
+	char** lookup(char* filename, char delimit)
+	{
+		FILE *f;
+		char * line = NULL;
+		size_t len = 0;
+		ssize_t read;
+		char** ptr;	
+		f=fopen(filename,"r");
+		if(!f)
+			return NULL;
+		if( read = getline(&line, &len, f) ==-1)
+			return NULL;
+		fclose(f);
+		return str_split(line,delimit);
+	}
+
+	/** setzt die Abfrage auf Standardwerte */
+	int reset(query* abfrage){
+		int i;
+		if(abfrage->src!=NULL)
+			for(i=0; i<MAXFIELDS;i++)
+				abfrage->felder[i]=abfrage->src->felder[i];
+		else
+			for(i=0; i<MAXFIELDS;i++)
+				abfrage->felder[i]=i+1;
+
+		strcpy(abfrage->as,"input");
+		strcpy(abfrage->f1,"1");
+		strcpy(abfrage->f1,"1");
+		abfrage->join=0;
+	}
+
+	/** gibt die Abfrage in SQL aus */
+	int ausgeben(query* e)
+	{
+		int i=0; char buffer[3];
+		if (e==NULL)
+			return -1;
+
+		/* select relevanten felder  */
+		while(e->felder[i+1]!=-1 && i+1<MAXFIELDS){
+			sprintf(buffer,"$\%d,",e->felder[i++]);
+			strcat(e->select,buffer);
+		} 
+		sprintf(buffer,"$\%d",e->felder[i]);
+		strcat(e->select,buffer);
+
+		printf("SELECT \%s FROM \%s",
+			e->select, e->from);
+		
+		/* bei Join und union: Quelle1 abfragen */
+		if(e->join && e->src2!=NULL){
+			printf("(\n\t");
+			ausgeben(e->src2);
+			printf(") AS \%s",e->src2->as);
+		}
+		/*findet ein join oder eine union statt?*/
+		if(e->join)
+			printf(" join \%s",e->t2);
+		if(e->sqlunion)
+			printf(" union ");
+		/* rekursiv alle Unterabfragen */
+		if(e->src!=NULL){
+			printf("(\n\t");
+			ausgeben(e->src);
+			printf(") AS \%s",e->src->as);
+		}
+
+		/*nur bei join */
+		if(e->join)
+			printf(" on 1.$\%s = 2.$\%s",e->f1,e->f2);
+
+		if(strlen(e->where)!=0)
+			printf(" WHERE \%s",
+				e-> where);
+		if(strlen(e->groupby)!=0)
+			printf(" GROUP BY \%s",
+				e->groupby);
+		if(strlen(e->orderby)!=0)
+			printf(" ORDER BY \%s",
+				e-> where, e->groupby, e->orderby);
+		printf("\n");
+		return 1;
+	}
+ 
+/*------------------------------------------------------------------
+ * Methoden zu den Bash-Kommandos
+ *------------------------------------------------------------------*/
+	/* vereint zwei Tabellen */
+	query *makeunion(char* eingabe, query* q)
+	{
+		query* neu;
+		/* erstes Argument? => gleich rein */
+		if(strlen(q->from)==0 && q->src==NULL){
+			strcpy(q->from,eingabe);
+			return q;
+		}
+		/* sonst: mache union*/
+		neu=(query*)malloc(sizeof(query));
+		neu->src=q;
+		reset(neu);
+		neu->sqlunion=1;
+		strcpy(neu->from,eingabe);
+		return neu;
+	}
+
+	/** zu grep: parse pattern fuer grep*/
+	int zugrep(char* pattern, query* abfrage )
+	{
+		int i=0; char buffer[3];
+		strcat(abfrage-> where, "(");
+		while(abfrage->felder[i]!=-1 && i<MAXFIELDS){
+			 sprintf(buffer,"$\%d",abfrage->felder[i++]);
+			 strcat(abfrage->where,buffer);
+			 strcat(abfrage->where," like \'\%");
+			 strcat(abfrage->where,pattern);
+			 strcat(abfrage->where,"\%\' or ");
+		}
+		strcat(abfrage-> where, "false)");
+	}
+	
+	/** parst eine in Optionen angegebene Liste wie d1,2,4-6
+		in ein Feld zu 1,2,4,5,6 */
+	int parseListe(char*e, int* feld)
+	{
+		int crtf=0;
+		int a,b,ret;
+		do{
+			e++;
+			ret=sscanf(e,"\%d-\%d",&a,&b);
+			/* felder beginnen bei 0*/
+			a--; b--;
+			if(ret==0)/*error*/
+				return -1;
+			/* von - bis  */
+			else if(ret==2){
+				for(;a<=b;a++)
+				   feld[crtf++]=feld[a];
+			}/*einzelne Auswahl */else{
+				feld[crtf++]=feld[a];
+			}
+			while((*e>='0' && *e<='9')||*e=='-')
+				e++;
+		}while(*e==',');
+		feld[crtf]=-1;
+		return 1;
+	}
+
+	/* zu sort */
+	int optssort(char* e, query* q){
+		int i;
+		char buffer[3];
+		int* feld=(int*) malloc(MAXFIELDS*sizeof(int));
+		for (i=0;i<MAXFIELDS;i++)	
+			feld[i]=q->felder[i];
+		/*bis Ende erreicht*/
+		while(*++e!=0){
+			switch (*e){
+			case 'k':
+				i=0;
+				parseListe(e,feld);
+				while(feld[i+1]!=-1 && i+1<MAXFIELDS){
+					sprintf(buffer,"$\%d,",feld[i++]);
+					strcat(q->groupby,buffer);
+				}
+				sprintf(buffer,"$\%d",feld[i]);
+				strcat(q->groupby,buffer);
+				break;
+			}
+		}
+		return 1;
+	}
+	
+	/* zu cut */
+	int optscut(char* e, query* q){
+		/*bis Ende erreicht*/
+		while(*++e!=0){
+			switch (*e){
+			case 'f':
+				parseListe(e,q->felder);
+				break;
+			}
+		}
+		return 1;
+	}
+
+	/* zu grep */
+	int optsgrep(char* e, query* q){
+		/*bis Ende erreicht*/
+		while(*++e!=0){
+			switch (*e){
+			case 'v':
+				strcat(q->where, "NOT ");
+				break;
+			case 'c':
+				strcpy(q->select, "count(*)");
+				break;
+			}
+		}
+		return 1;
+	}
+
+	/* zu join */
+	int optsjoin(char* e, query* q){
+		/*bis Ende erreicht*/
+		while(*++e!=0){
+			switch (*e){
+			case 'f':
+				parseListe(e,q->felder);
+				break;
+			}
+		}
+		return 1;
+	}
+/*------------------------------------------------------------------
+ * Main
+ *------------------------------------------------------------------*/
+	int main(int argc, char * argv[])
+ 	{
+		pANTLR3_INPUT_STREAM           input;
+		pSimpleCalcLexer               lex;
+		pANTLR3_COMMON_TOKEN_STREAM    tokens;
+		pSimpleCalcParser              parser;
+		
+		if(argc!=2){
+			printf("\%s: fehlender Operand\n",argv[0]);
+			return 1;
+		}
+		
+		input = antlr3FileStreamNew ((pANTLR3_UINT8)argv[1], ANTLR3_ENC_8BIT);
+		lex    = SimpleCalcLexerNew                (input);
+		tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));
+		parser = SimpleCalcParserNew               (tokens);
+
+		parser  ->file(parser);
+
+		// Must manually clean up
+		//
+		parser ->free(parser);
+		tokens ->free(tokens);
+		lex    ->free(lex);
+		input  ->close(input);
+
+		return 0;
+	}
+ 
+}
+ 
+/*------------------------------------------------------------------
+ * PARSER RULES
+ *------------------------------------------------------------------*/
+file: line*;
+
+complete_command : list separator?
+                 ;
+list             : (list separator_op)? and_or
+                 ;
+and_or           : and_or AND_IF linebreak pipeline
+                 | and_or OR_IF  linebreak pipeline
+                 ;
+pipeline         :      pipe_sequence
+                 | Bang pipe_sequence
+                 ;
+pipe_sequence    :                             command
+                 | pipe_sequence '|' linebreak command
+                 ;
+command          : simple_command
+                 | compound_command
+                 | compound_command redirect_list
+                 | function_definition
+                 ;
+compound_command : brace_group
+                 | subshell
+                 | for_clause
+                 | case_clause
+                 | if_clause
+                 | while_clause
+                 | until_clause
+                 ;
+subshell         : '(' compound_list ')'
+                 ;
+compound_list    :              term
+                 | newline_list term
+                 |              term separator
+                 | newline_list term separator
+                 ;
+term             : term separator and_or
+                 |                and_or
+                 ;
+for_clause       : For name linebreak                            do_group
+                 | For name linebreak in          sequential_sep do_group
+                 | For name linebreak in wordlist sequential_sep do_group
+                 ;
+name             : NAME                     /* Apply rule 5 */
+                 ;
+in               : In                       /* Apply rule 6 */
+                 ;
+wordlist         : wordlist WORD
+                 |          WORD
+                 ;
+case_clause      : Case WORD linebreak in linebreak case_list    Esac
+                 | Case WORD linebreak in linebreak case_list_ns Esac
+                 | Case WORD linebreak in linebreak              Esac
+                 ;
+case_list_ns     : case_list case_item_ns
+                 |           case_item_ns
+                 ;
+case_list        : case_list case_item
+                 |           case_item
+                 ;
+case_item_ns     :     pattern ')'               linebreak
+                 |     pattern ')' compound_list linebreak
+                 | '(' pattern ')'               linebreak
+                 | '(' pattern ')' compound_list linebreak
+                 ;
+case_item        :     pattern ')' linebreak     DSEMI linebreak
+                 |     pattern ')' compound_list DSEMI linebreak
+                 | '(' pattern ')' linebreak     DSEMI linebreak
+                 | '(' pattern ')' compound_list DSEMI linebreak
+                 ;
+pattern          :             WORD         /* Apply rule 4 */
+                 | pattern '|' WORD         /* Do not apply rule 4 */
+                 ;
+if_clause        : If compound_list Then compound_list else_part Fi
+                 | If compound_list Then compound_list           Fi
+                 ;
+else_part        : Elif compound_list Then compound_list
+                 | Elif compound_list Then compound_list else_part
+                 | Else compound_list
+                 ;
+while_clause     : While compound_list do_group
+                 ;
+until_clause     : Until compound_list do_group
+                 ;
+function_definition : fname '(' ')' linebreak function_body
+                 ;
+function_body    : compound_command                /* Apply rule 9 */
+                 | compound_command redirect_list  /* Apply rule 9 */
+                 ;
+fname            : NAME                            /* Apply rule 8 */
+                 ;
+brace_group      : Lbrace compound_list Rbrace
+                 ;
+do_group         : Do compound_list Done           /* Apply rule 6 */
+                 ;
+simple_command   : cmd_prefix cmd_word cmd_suffix
+                 | cmd_prefix cmd_word
+                 | cmd_prefix
+                 | cmd_name cmd_suffix
+                 | cmd_name
+                 ;
+cmd_name         : WORD                   /* Apply rule 7a */
+                 ;
+cmd_word         : WORD                   /* Apply rule 7b */
+                 ;
+cmd_prefix       :            io_redirect
+                 | cmd_prefix io_redirect
+                 |            ASSIGNMENT_WORD
+                 | cmd_prefix ASSIGNMENT_WORD
+                 ;
+cmd_suffix       :            io_redirect
+                 | cmd_suffix io_redirect
+                 |            WORD
+                 | cmd_suffix WORD
+                 ;
+redirect_list    :               io_redirect
+                 | redirect_list io_redirect
+                 ;
+io_redirect      :           io_file
+                 | IO_NUMBER io_file
+                 |           io_here
+                 | IO_NUMBER io_here
+                 ;
+io_file          : '<'       filename
+                 | LESSAND   filename
+                 | '>'       filename
+                 | GREATAND  filename
+                 | DGREAT    filename
+                 | LESSGREAT filename
+                 | CLOBBER   filename
+                 ;
+filename         : WORD                      /* Apply rule 2 */
+                 ;
+io_here          : DLESS     here_end
+                 | DLESSDASH here_end
+                 ;
+here_end         : WORD                      /* Apply rule 3 */
+                 ;
+newline_list     :              NEWLINE
+                 | newline_list NEWLINE
+                 ;
+linebreak        : newline_list
+                 | /* empty */
+                 ;
+separator_op     : '&'
+                 | ';'
+                 ;
+separator        : separator_op linebreak
+                 | newline_list
+                 ;
+sequential_sep   : ';' linebreak
+                 | newline_list
+                 ;
+
+line: cmd (PIPE  cmd)* (('>'|'>>')  WORD)? 
+	('\n'| ';' | '&&' | '||' )
+	{
+		ausgeben(lastquery);
+		lastquery=NULL;
+	}
+	;
+
+cmd returns [query *r]
+@init{
+	/* neue Query r, vorherige Abfrage als FROM-Tabelle
+		NULL, wenn erstes Kommando */
+	char tmp=0; //zaehlt args
+	r=(query*) malloc(sizeof(query));
+	r->src=lastquery;
+	reset(r);
+}
+@after{
+	lastquery=r;
+}
+	:
+	  'cut' 	( OPTS { optscut($OPTS.text->chars,r);}
+			| WORD { r=makeunion($WORD.text->chars,r);}
+			)+
+	| 'cat' 	( WORD { r=makeunion($WORD.text->chars,r); } )*
+	| 'grep' 	( o1=OPTS { optsgrep($o1.text->chars,r); } )*
+			p=WORD	  { zugrep($p.text->chars,r); }
+			( o2=OPTS { optsgrep($o2.text->chars,r);   } 
+			| f=WORD  { r=makeunion($f.text->chars,r); }
+			)*
+	| 'sort'	( OPTS { optssort($OPTS.text->chars,r);}
+			| WORD { r=makeunion($WORD.text->chars,r);}
+			)*
+	| 'join' (('-1' n1=NUMBER	{strcpy(r->f1,$n1.text->chars);} )
+		| ('-2' n2=NUMBER	{strcpy(r->f2,$n2.text->chars);} )
+		| OPTS
+		| WORD	{	if(tmp++==0) /* erstes Argument*/
+					strcpy(r->from,$WORD.text->chars);
+					else
+					strcpy(r->t2,$WORD.text->chars);
+				}
+		| '- '	{	if (tmp++==0){ /*erstes Arg? => swap*/
+					r->src2=r->src; r->src=NULL;
+				}
+		}
+		)+ {r->join=1;}
+	| 'wc -l'	{strcpy(r->select,"count(*)");}
+	| words {
+			ausgeben(lastquery->src); lastquery=NULL;
+			printf("\%s \n",$words.text->chars);
+	}
+	;
+
+words: WORD+ (PIPE WORD+)?;
+
+fromsub: '<' '(' cmd (PIPE cmd)* ')'
+	;
+
+ 
+ 
+/*------------------------------------------------------------------
+ * LEXER RULES
+ *------------------------------------------------------------------*/
+
+NUMBER		: (DIGIT)+
+      		;
+
+WORD		: (LETTER)+
+		;
+
+OPTS		: ('-'|'+') (LETTER|DIGIT|'-')+
+		;
+
+WHITESPACE  	: ( '\t' | ' ' | '\r' | '\u000C' | '\\' '\n' )+
+              	{
+                	 $channel = HIDDEN;
+              	}
+            	;
+ 
+fragment
+DIGIT       	: '0'..'9'
+            	;
+
+fragment
+LETTER		: ('A'..'Z'|'a'..'z'|'.'|'_'|','|'\|')
+		;
+

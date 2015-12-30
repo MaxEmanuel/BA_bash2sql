@@ -1,0 +1,37 @@
+#!/bin/bash
+#2014-08-25
+sort -k1,1 -t\| orders.tbl | cat orders.csv - | awk -F\| '
+	NR==1{
+		print $1"|" $6
+	}
+	NR>1 && $5<"1993-10-01" && $5>="1993-07-01"{
+		print $1"|" $6
+	}
+' > tmporder.csv
+
+# and exists lineitem cdate<receiptdate
+sort -k1,1 -t\| lineitem.tbl | cat lineitem.csv - | awk -F\| '
+	NR==1 || $12<$13{
+		print $1
+	}
+' | uniq |\
+join --header -t\| -1 1 -2 1 tmporder.csv - > tmp.csv 
+
+# count mittels awk
+# group by $2 (orderprio)
+head -1 tmp.csv > tmp1.csv
+tail -n+2 tmp.csv  | sort -t\| -k2,2 | cat tmp1.csv - | awk -F\| '
+	NR==1{print $2,"order_count"}
+	NR==2{g2=$2; count=1}
+	NR>2{
+		if( g2==$2 ){
+			count++
+		}else{
+			print g2, count;
+			g2=$2;count=1;
+		}
+	}
+	END{print g2,count}
+' OFS=\| | cat 
+
+rm tmp*.csv 

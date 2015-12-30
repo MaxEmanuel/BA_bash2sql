@@ -1,0 +1,44 @@
+#!/bin/bash
+# 2014-08-28
+cut nation.csv -d\| -f1-3 > tmp1.csv
+cut nation.tbl -d\| -f1-3 | sort -t\| -k3,3 >> tmp1.csv
+cut region.csv -d\| -f1 > tmp2.csv
+cat region.tbl | grep "EUROPE" | cut -d\| -f1 | cat tmp2.csv - |\
+join --header -t\| -1 3 -2 1 tmp1.csv - > tmprn.csv
+
+cut supplier.csv -d\| -f1-7 > tmp1.csv
+cut supplier.tbl -d\| -f1-7 | sort -t\| -k4,4 >> tmp1.csv
+head -1   tmprn.csv > tmp2.csv
+tail -n+2 tmprn.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 4 -2 2 tmp1.csv - > tmprns.csv
+
+cut partsupp.csv -d\| -f1,2,4 > tmp1.csv
+cut partsupp.tbl -d\| -f1,2,4 | sort -t\| -k2,2 >> tmp1.csv
+head -1   tmprns.csv > tmp2.csv
+tail -n+2 tmprns.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 2 -2 2 tmp1.csv - > join1.csv
+
+
+cut part.csv -d\| -f1,2,3 > tmp1.csv
+cat part.tbl | awk -F\| '
+	$6==15 && $5~/.*BRASS/ { print $1,$2,$3 } ' |\
+sort -t\| -k1,1 >> tmp1.csv
+head -1   join2.csv > tmp2.csv
+tail -n+2 join2.csv | sort -t\| -k1,1 | cat tmp2.csv - |\
+join --header -t\| -1 1 -2 1 tmp1.csv - > join3.csv
+
+cut partsupp.csv -d\| -f1,2,4 > tmp1.csv
+cut partsupp.tbl -d\| -f1,2,4 | sort -t\| -k1,1 | cat tmp1.csv - |\
+join --header -t\| -1 1 -2 1 - join3.csv |\
+awk -F\| ' NR==1 || $3==$6 { print $0 } ' > join5.csv 
+
+head -1   tmprns.csv > tmp1.csv
+tail -n+2 tmprns.csv | sort -t\| -k2,2 >> tmp1.csv
+head -1   join5.csv > tmp2.csv
+tail -n+2 join5.csv | sort -t\| -k2,2 | cat tmp2.csv - |\
+join --header -t\| -1 2 -2 2 tmp1.csv - |\
+awk -F\| ' {print $6,$3,$9,$10,$13,$4,$5,$7} '  > join6.csv
+
+head -1 join6.csv
+
+tail -n+2 join6.csv | sort -t\| -k1,1 -snr

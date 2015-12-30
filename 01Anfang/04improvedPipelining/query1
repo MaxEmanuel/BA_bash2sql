@@ -1,0 +1,22 @@
+#!/bin/bash
+#2014-08-25
+cat lineitem.tbl | sort -t\| -k9,10 | cat lineitem.csv - |\
+awk -F\| '
+	NR==1{ count=0; sum5=sum6=sum17=sum18=sum7=0;
+		print $9, $10, "sum_qty", "sum_base_price", "sum_disc_price", "sum_charge", "avg_qty", "avg_price", "avg_disc", "count_order"
+	}
+	NR==2{g9=$9; g10=$10;}
+	NR>2{
+		if( g9!=$9 || g10!=$10 ){
+			if(count)
+				print g9,g10,sum5,sum6,sum17,sum18,sum5/count,sum6/count,sum7/count,count;
+			g9=$9; g10=$10; count=0;
+			sum5=sum6=sum17=sum18=sum7=0}
+	}
+	NR>1 && $11<="1998-09-02"{
+			count++; sum5+=$5; sum6+=$6;
+			sum17+=($6*(1.0-$7)); sum18+=($6*(1.0-$7)*(1.0+$8)); sum7+=$7;
+	}END{print g9,g10,sum5,sum6,sum17,
+		sum18, sum5/count, sum6/count, sum7/count, count;
+	}
+' OFS=\|

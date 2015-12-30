@@ -1,0 +1,74 @@
+\select@language {german}
+\select@language {english}
+\select@language {german}
+\contentsline {chapter}{Abstract}{vii}{section*.1}
+\contentsline {chapter}{\numberline {1}Einf\IeC {\"u}hrung}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Motivation}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Textbasierte Datenbanken}{2}{section.1.2}
+\contentsline {section}{\numberline {1.3}Vorgehen}{3}{section.1.3}
+\contentsline {chapter}{\numberline {2}Bash statt SQL}{5}{chapter.2}
+\contentsline {section}{\numberline {2.1}Relationale Algebra der Unix-Shell im Vergleich zu SQL}{5}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}Grundlage}{5}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}Selektion}{5}{subsection.2.1.2}
+\contentsline {subsection}{\numberline {2.1.3}Projektion}{6}{subsection.2.1.3}
+\contentsline {subsection}{\numberline {2.1.4}Vereinigung}{7}{subsection.2.1.4}
+\contentsline {subsection}{\numberline {2.1.5}Kreuzprodukt}{7}{subsection.2.1.5}
+\contentsline {subsection}{\numberline {2.1.6}Mengendifferenz}{7}{subsection.2.1.6}
+\contentsline {subsection}{\numberline {2.1.7}Umbennenung}{8}{subsection.2.1.7}
+\contentsline {subsection}{\numberline {2.1.8}Relationaler Verbund}{8}{subsection.2.1.8}
+\contentsline {subsection}{\numberline {2.1.9}Gruppierung und Aggregation}{10}{subsection.2.1.9}
+\contentsline {section}{\numberline {2.2}Performanzmessungen}{11}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}TPC-H Benchmarks}{11}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}Implementierung mit Shell-Skripten}{12}{subsection.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}Optimierung durch Parallelisierung}{16}{subsection.2.2.3}
+\contentsline {chapter}{\numberline {3}Vergleich}{21}{chapter.3}
+\contentsline {section}{\numberline {3.1}SQL-\IeC {\"a}hnliche Syntax}{21}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Datamash}{21}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}csvtool}{23}{subsection.3.1.2}
+\contentsline {subsection}{\numberline {3.1.3}Fsdb}{23}{subsection.3.1.3}
+\contentsline {section}{\numberline {3.2}Abfragen mit SQL}{24}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}txt-sushi}{24}{subsection.3.2.1}
+\contentsline {subsection}{\numberline {3.2.2}csvfix}{25}{subsection.3.2.2}
+\contentsline {subsection}{\numberline {3.2.3}csvkit}{27}{subsection.3.2.3}
+\contentsline {subsection}{\numberline {3.2.4}querycsv.py}{27}{subsection.3.2.4}
+\contentsline {subsection}{\numberline {3.2.5}gcsvsql}{28}{subsection.3.2.5}
+\contentsline {subsection}{\numberline {3.2.6}Mynodbcsv}{28}{subsection.3.2.6}
+\contentsline {subsection}{\numberline {3.2.7}shql}{28}{subsection.3.2.7}
+\contentsline {chapter}{\numberline {4}Parser mit Yacc und Lex}{29}{chapter.4}
+\contentsline {section}{\numberline {4.1}Vorwissen zu Yacc und Lex}{29}{section.4.1}
+\contentsline {section}{\numberline {4.2}Der Bash2SQL-\IeC {\"U}bersetzer mit Yacc}{29}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}Arbeitsweise}{29}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Bedienung des Bash2SQL-\IeC {\"U}bersetzers}{30}{subsection.4.2.2}
+\contentsline {chapter}{\numberline {5}Parser mit ANTLR}{31}{chapter.5}
+\contentsline {section}{\numberline {5.1}Konfiguration}{31}{section.5.1}
+\contentsline {subsection}{\numberline {5.1.1}Installieren der Bibliothek}{31}{subsection.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}Starten von ANTLR}{31}{subsection.5.1.2}
+\contentsline {subsection}{\numberline {5.1.3}Vorwissen zu ANTLR}{32}{subsection.5.1.3}
+\contentsline {section}{\numberline {5.2}Der Bash2SQL-\IeC {\"U}bersetzer mit ANTLR in C}{33}{section.5.2}
+\contentsline {subsection}{\numberline {5.2.1}Neues Konzept}{33}{subsection.5.2.1}
+\contentsline {subsection}{\numberline {5.2.2}C-Quellcode}{33}{subsection.5.2.2}
+\contentsline {subsection}{\numberline {5.2.3}Die Grammatik}{34}{subsection.5.2.3}
+\contentsline {subsection}{\numberline {5.2.4}Bedienung}{35}{subsection.5.2.4}
+\contentsline {section}{\numberline {5.3}Der Bash2SQL-\IeC {\"U}bersetzer mit ANTLR in C++}{36}{section.5.3}
+\contentsline {subsection}{\numberline {5.3.1}Unterschiede: C vs. C++ mit ANTLR}{36}{subsection.5.3.1}
+\contentsline {subsection}{\numberline {5.3.2}Die Klasse TheQuery}{37}{subsection.5.3.2}
+\contentsline {subsubsection}{Interne Repr\IeC {\"a}sentation}{37}{section*.3}
+\contentsline {subsubsection}{Darstellung der Felder}{38}{section*.4}
+\contentsline {subsection}{\numberline {5.3.3}Der Parser n\IeC {\"a}her betrachtet}{39}{subsection.5.3.3}
+\contentsline {subsubsection}{Das Kommando cut}{41}{section*.5}
+\contentsline {subsubsection}{Das Kommando grep}{42}{section*.6}
+\contentsline {subsubsection}{Das Kommando join}{42}{section*.7}
+\contentsline {subsubsection}{Ausdr\IeC {\"u}cke der Sprache awk}{43}{section*.8}
+\contentsline {subsection}{\numberline {5.3.4}Bedienung}{44}{subsection.5.3.4}
+\contentsline {subsection}{\numberline {5.3.5}R\IeC {\"u}ck\IeC {\"u}bersetzung einer TPC-H Abfrage}{44}{subsection.5.3.5}
+\contentsline {chapter}{\numberline {6}Ausblick}{47}{chapter.6}
+\contentsline {section}{\numberline {6.1}Schleifen}{47}{section.6.1}
+\contentsline {section}{\numberline {6.2}Sprache awk separat}{47}{section.6.2}
+\contentsline {section}{\numberline {6.3}Vor \IeC {\"U}bersetzen zusammenf\IeC {\"u}gen}{47}{section.6.3}
+\contentsline {section}{\numberline {6.4}Fazit}{48}{section.6.4}
+\contentsline {part}{Appendix}{51}{part*.9}
+\contentsline {chapter}{\numberline {A}TPC-H-Abfragen}{51}{appendix.A}
+\contentsline {section}{\numberline {A.1}Abfragen}{51}{section.A.1}
+\contentsline {section}{\numberline {A.2}Parallelisierte Abfragen}{70}{section.A.2}
+\contentsline {chapter}{\numberline {B}datamash Abfragen}{91}{appendix.B}
+\contentsline {chapter}{Literaturverzeichnis}{107}{appendix*.75}

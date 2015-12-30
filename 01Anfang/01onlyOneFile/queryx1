@@ -1,0 +1,25 @@
+#!/bin/bash
+
+cat lineitem.* | awk -F\; '
+	NR==1{
+		print $0 "sum_disc|sum_charge|"
+	}
+	NR>1 && $11<="1998-9-2"{
+		suma=($6*(1.0-$7));
+		sumb=($6*(1.0-$7)*(1.0-$8));
+		print $0 suma "|" sumb "|"
+	}
+' OFS=\; | cat | tail -n+2 | sort -t\; -k9,10 | awk -F\; '
+	NR==0{ coun=0; sum5=sum6=sum17=sum18=sum7=0;
+		print $9, $10, "count"
+	}
+	NR>0{
+		if( g9==$9 && g10==$10 ){
+			count++;
+		}
+		else{
+			print $9,$10,count;
+			g9=$9; g10=$10; count=0;
+		}
+	}
+'

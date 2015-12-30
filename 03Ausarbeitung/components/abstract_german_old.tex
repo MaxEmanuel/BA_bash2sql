@@ -1,0 +1,26 @@
+% Included by MAIN.TEX
+
+
+\clearemptydoublepage
+
+
+
+
+
+
+\vspace*{2cm}
+\begin{center}
+{\Large \bf Zusammenfassung}
+\end{center}
+\vspace{1cm}
+Diese Arbeit beschäftigt sich mit Bash-Skripten, die tabellenähnliche CSV-Dateien auslesen, im Vergleich zu ihnen äquivalenten SQL-Abfragen, die auf relationalen Datenbanken arbeiten.\\
+Es wird der Frage nachgegangen, welche Methoden in der Wissenschaft zur Datenanalyse eingesetzt werden, wie effizient diese sind und untersucht, wie diese für relationale Datenbanksysteme angepasst werden können. Das Ziel ist zu zeigen, dass die bisherigen Methoden langsam und kompliziert sind und eine Konvertierung in SQL möglich ist.
+Diese Arbeit stellt die für die Implementierung nötigen Kommandos vor und untersucht auch neuere Erfindungen, die Abfragen auf Textdateien erleichtern.\\
+Damit wird zuerst ein Vergleich geschaffen, in dem der TPC-H Benchmark ausschließlich unter Verwendung der Unix-Kommandos mit Shell-Skripten implementiert wird und im Anschluss dazu ein Übersetzer entworfen, mit dem Skripte automatisiert in SQL-Abfragen konvertiert werden.
+Der Performanzvergleich der TPC-H Benchmarks zeigt deutlich den Optimierungsbedarf, Abfragezeiten von bis 15 Minuten bei bis zu 10\ GB großen sind zu viel. Auch der Einsatz verschiedener Hilfsmittel können die Abfragen nicht beschleunigen, sodass eine Konvertierung notwendig wird.\\
+Der entwickelte Bash2SQL-Compiler übersetzt jedes Kommando in eine SQL-Abfrage und verschachtelt über eine Pipeline verbundene Kommandos, sodass am Ende ein gültiger SQL-Ausdruck entsteht, eventuell eingebunden mittels eines SQL-Kommandos in ein Bash-Skript.
+
+%Performanzvergleich der Anfrageverarbeitung auf textbasierten Datenbanken mittels Skriptsprachen (Bash mit awk und sed) zu modernen Datenbanksystemn mittels SQL und Entwicklung eines Bash-zu-SQL-Übersetzers zur Ersetzung von Zeilenkommandos
+%hauptpunkte meines Erachtens:
+%1. implementation of the TPC-H benchmark with unix command line tools
+%2. a bash to SQL converter

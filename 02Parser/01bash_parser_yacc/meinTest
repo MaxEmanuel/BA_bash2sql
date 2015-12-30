@@ -1,0 +1,1 @@
+cat tabelle | cut -f1,2,3 | grep Muster

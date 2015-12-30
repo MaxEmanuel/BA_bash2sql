@@ -1,0 +1,15 @@
+head -1 join1.csv > tmp1.csv
+tail -n+2 join1.csv  | sort -t\| -k2,2 | cat tmp1.csv -  | awk -F\| '
+	NR==1{print $2, "min("$3")"}
+	NR==2{g2=$2; min=$3}
+	NR>2{
+		if( g2==$2 ){
+			if(min>$3) 
+				min=$3
+		}else{
+			print g2, min;
+			g2=$2; min=$3;
+		}
+	}
+	END{print $2,min}
+' OFS=\| > join2.csv

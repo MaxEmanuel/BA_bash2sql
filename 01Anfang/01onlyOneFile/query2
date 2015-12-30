@@ -1,0 +1,31 @@
+#!/bin/bash
+# P >< PS (partkey)
+awk -F\; 'NR==1 || ($5~/.*BRASS/ && $6=="21") {print $0}' part.csv |\
+join --header -t\; -1 1 -2 1 - partsupp.csv > join0.csv
+
+# S >< (nationkey)
+head -1 supplier.csv > tmp1.csv
+head -1 nation.csv > tmp2.csv
+tail -n +2 supplier.csv | sort -t, -k4 >> tmp1.csv
+tail -n +2 nation.csv | sort -t, -k1  >> tmp2.csv
+join --header -t\; -1 4 -2 1 tmp1.csv tmp2.csv > join1.csv
+
+# >< R (regionkey)
+head -1 join1.csv > tmp1.csv
+head -1 region.csv > tmp2.csv
+tail -n+2 join1.csv | sort -t\; join1.csv >> tmp1.csv
+tail -n +2 region.csv | grep EUROPE >> tmp2.csv
+join --header -t\; -1 9 -2 1 tmp1.csv tmp2.csv > join2.csv
+
+# (suppkey)
+head -1 join0.csv > tmp1.csv
+head -1 join2.csv > tmp2.csv
+tail -n+2 join0.csv | sort -t\; -k10 >> tmp1.csv
+tail -n+2 join2.csv | sort -t\; -k3 join2.csv >> tmp2.csv
+join --header -t\; -1 10 -2 3 tmp1.csv tmp2.csv > endjoin.csv
+
+#cat endjoin.csv
+#rm tmp1.csv tmp2.csv join1.csv join0.csv join2.csv
+#jointabelle ist in endjoin.csv
+min=`tr '.,' ',.' < endjoin.csv | datamash -H -t\; min 12`
+tr '.,' ',.' < endjoin.csv | awk -F\; -v min=$min 'NR==1||$12==min{print $19 ";" $16 ";" $21 ";" $2 ";" $4 ";" $17 ";" $18 ";" $20 }'

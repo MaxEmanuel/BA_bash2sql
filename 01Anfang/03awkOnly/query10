@@ -1,0 +1,53 @@
+#!/bin/bash
+## N >< C >< O >< L
+echo 'O >< L (orderkey)'
+cut -d\| -f1,2 orders.csv > tmporder.csv
+awk -F\| '
+	$5>="1993-10-01" && $5<"1994-01-01"{
+		print $1 "|" $2
+	} 
+' orders.tbl | sort -t\| -k1,1 >> tmporder.csv
+
+awk -F\| '{print $1 "|revenue"}' lineitem.csv > tmpline.csv
+awk -F\| '$9=="R"{
+		suma=($6*(1.0-$7));
+		print $1 "|" suma
+	}' lineitem.tbl | sort -t\| -k1,1 >> tmpline.csv
+
+join --header -t\| -1 1 -2 1 tmporder.csv tmpline.csv > tmplo.csv
+
+echo 'C >< (custkey)'
+cat customer.csv > tmp1.csv
+cut -d\| -f-8 customer.tbl | sort -t\| -k1,1 >> tmp1.csv
+head -1 tmplo.csv > tmp2.csv
+tail -n+2 tmplo.csv | sort -t\| -k2,2 >> tmp2.csv
+join --header -t\| -1 1 -2 2 tmp1.csv tmp2.csv > join1.csv
+
+echo 'N >< (nationkey)'
+head -1 join1.csv > tmp2.csv
+tail -n+2 join1.csv | sort -t\| -k4,4 >> tmp2.csv
+cut -d\| -f1,2 nation.csv > tmp1.csv
+cut -d\| -f1,2 nation.tbl | sort -t\| -k1,1 >> tmp1.csv
+join --header -t\| -1 1 -2 4 tmp1.csv tmp2.csv > join2.csv
+
+# group by, sum(revenue)
+head -1 join2.csv > tmp1.csv
+tail -n+2 join2.csv  | sort -r -t\| -k3,8 | cat tmp1.csv - | awk -F\| '
+	NR==1{print $3, $4, $7, $6, $2, $5, $8, "sum("$11")"}
+	NR==2{g3=$3;g4=$4;g7=$7;g6=$6;g2=$2;g5=$5;g8=$8;sum=$11}
+	NR>2{
+		if(g3==$3 && g4==$4 && g7==$7 && g6==$6 && 
+			g2==$2 && g5==$5 && g8==$8){
+			sum+=$11
+		}else{
+			print g3, g4, g7, g6, g2, g5, g8, sum;
+			g3=$3;g4=$4;g7=$7;g6=$6;g2=$2;g5=$5;g8=$8;sum=$11;
+		}
+	}
+	END{print g3, g4, g7, g6, g2, g5, g8, sum}
+' OFS=\| > tmp.csv
+
+head -1 tmp.csv;
+tail -n+2 tmp.csv | sort -t\| -nrk8 | head -20
+
+rm tmp*.csv join1.csv

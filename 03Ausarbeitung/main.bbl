@@ -1,0 +1,95 @@
+\begin{thebibliography}{10}
+
+\bibitem{IBM_Fortran}
+{\em IBM FORTRAN Program Products for OS and the CMS Component of VM/370
+  General Information}.
+\newblock IBM, 1972.
+
+\bibitem{Mynodbcsv}
+Stanislaw Adaszewski.
+\newblock {\em Mynodbcsv: Lightweight Zero-Config Database Solution for
+  Handling Very Large CSV Files}.
+\newblock Plos One, 2014.
+
+\bibitem{Kemper}
+André~Eickler Alfons~Kemper.
+\newblock {\em Datenbanksysteme - Eine Einführung}.
+\newblock Oldenburg Verlag, 2011.
+
+\bibitem{TUPE}
+Robert~Pike Brian W.~Kernighan.
+\newblock {\em Der Unix-Werkzeugkasten}.
+\newblock Carl Hanser Verlag, 1987.
+
+\bibitem{Shell-BNF}
+Bill~Rosenblatt Cameron~Newham.
+\newblock {Learning the bash Shell}.
+\newblock
+  \url{http://my.safaribooksonline.com/book/operating-systems-and-server-administration/unix/1565923472/syntax/lbs.appd.div.3},
+  1998.
+
+\bibitem{db2}
+Don Chamberlin.
+\newblock {\em A Complete Guide to DB2 Universal Database}.
+\newblock Morgan Kaufmann Publishers, inc., 1998.
+
+\bibitem{meinders}
+{Eike Meinders}.
+\newblock {Der Parser-Generator Yacc}.
+\newblock \url{http://www.eike-meinders.de/Yacc}, 2004.
+
+\bibitem{Gulbins}
+Jürgen Gulbins.
+\newblock {\em UNIX}.
+\newblock Springer-Verlag, 1985.
+
+\bibitem{Geo}
+David~R. Hoffman.
+\newblock {\em Effective Database Design for Geoscience Professionals}.
+\newblock AT\&T Bell Laboratories, 1994.
+
+\bibitem{DataScience}
+Jeroen Janssens.
+\newblock {\em Data Science at the Command Line}.
+\newblock O'Reilly, 2014.
+
+\bibitem{antlr}
+Terrence Parr.
+\newblock {\em The Definitive ANTLR Reference}.
+\newblock The Pragmatic Bookshelf, 2007.
+
+\bibitem{Prince}
+Robert Sedgewick.
+\newblock {\em Computer Science 226: Data Structures and Algorithms}.
+\newblock Princeton University, 2002.
+
+\bibitem{RFC}
+Y.~Shafranovich.
+\newblock {\em Common Format and MIME Type for Comma-Separated Values (CSV)
+  Files}.
+\newblock Network Working Group, 2005.
+
+\bibitem{HistoryTPC}
+Kim Shanley.
+\newblock {History and Overview of the TPC}.
+\newblock \url{http://www.tpc.org/information/about/history.asp}, 02.1998.
+
+\bibitem{statista}
+Statista.
+\newblock {Prognose zum Volumen der jährlich generierten digitalen Datenmenge
+  weltweit in den Jahren 2005 bis 2020 (in Exabyte)}.
+\newblock
+  \url{http://de.statista.com/statistik/daten/studie/267974/umfrage/prognose-zum-weltweit-generierten-datenvolumen/},
+  2014.
+
+\bibitem{AboutTPC}
+{TPC}.
+\newblock {About the TPC}.
+\newblock \url{http://www.tpc.org/information/about/abouttpc.asp}, 2014.
+
+\bibitem{TPC-H}
+{Transaction Processing Performance Council (TPC)}.
+\newblock {TPC BENCHMARK H}.
+\newblock \url{http://www.tpc.org/tpch/spec/tpch2.17.0.pdf}, 2013.
+
+\end{thebibliography}

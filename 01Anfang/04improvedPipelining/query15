@@ -1,0 +1,31 @@
+#!/bin/bash
+#revenue.csv
+cut lineitem.tbl -d\| -f1-11 | sort -t\| -k3,3 | cut lineitem.csv - -d\| -f3,6,7,11 | awk -F\| '
+	NR==1{
+		print $1,"total_revenue"
+	}
+	NR==2{g1=$1; sum=0; i=0; max=0}
+	NR>2{
+		if(g1!=$1 && sum>0){
+			line[i,0]=g1
+			line[i++,1] =sum;
+			sum=0;
+		}
+		g1=$1;
+	}
+	NR>1 && $4>="1996-01-01" && $4<"1996-04-01"{
+		sum+=($2*(1.0-$3));
+		max=(max<sum)?sum:max;
+	}
+	END{
+		line[i,0]=g1;line[i++,1]=sum;
+		for(j=0;j<i; j++)
+		  if(line[j,1]==max)
+		    print line[j,0], line[j,1];
+	}
+' OFS=\| > tmprev.csv
+# S >< revenue.csv
+sort -t\| -k1,1 supplier.tbl|
+cut -d\| -f1,2,3,5 supplier.csv - |\
+join --header -t\| -1 1 -2 1 - tmprev.csv
+rm tmprev.csv

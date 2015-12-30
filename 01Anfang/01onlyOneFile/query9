@@ -1,0 +1,46 @@
+#!/bin/bash
+## N >< S
+head -1 supplier.csv | cut -d\; -f1,4 > tmp1.csv
+tail -n+2 supplier.csv | cut -d\; -f1,4 | sort -t\; -k2 >> tmp1.csv
+cut -d\; -f1,2  nation.csv |\
+join --header -t\; -1 1 -2 2 - tmp1.csv > tmpsn.csv
+
+# L >< P (partkey)
+head -1 lineitem.csv | cut -d\; -f1,2,3,5,6,7 > tmp1.csv
+tail -n+2 lineitem.csv | cut -d\; -f1,2,3,5,6,7 | sort -t\; -k2 >> tmp1.csv
+head -1 part.csv | cut -d\; -f1 > tmp2.csv
+tail -n+2 part.csv | grep 'green'| cut -d\; -f1 >> tmp2.csv
+join --header -t\; -1 2 -2 1 tmp1.csv tmp2.csv > join1.csv
+
+# join1 >< PS (partkey && suppkey)
+join --header -t\; -1 1 -2 1 join1.csv partsupp.csv | awk -F\; '
+	NR==1{
+		print $2 ";" $3 ";amount"
+	}
+	NR>1 && $3==$6{
+		sum=$5*(1.0-$6)-$7*$4
+		print $2 ";" $3 ";" suma
+	}
+'> join2.csv
+
+# join2 >< O
+cut -d\; -f1,5 orders.csv |\
+join --header -t\; -1 1 -2 1 join2.csv - > join3.csv
+
+# join3 >< SN (suppkey)
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv | sort -t\; -k2 >> tmp1.csv
+head -1 tmpsn.csv > tmp2.csv
+tail -n+2 tmpsn.csv | sort -t\; -k3 >> tmp2.csv
+join --header -t\; -1 2 -2 3 tmp1.csv tmp2.csv | tee join4.csv |\
+ awk -F\; '
+	NR==1{
+		print $6 ";year;" $3
+	}
+	NR>1{
+		print $6 ";" substr($4,1,4) ";"$3
+	}
+'| sort -t\; -k2 -r | sort -t\; -k1 |\
+| datamash -H -s -t\; -g1,2 sum 3
+
+rm tmp*.csv join1.csv join2.csv join3.csv join4.csv

@@ -1,0 +1,42 @@
+#!/bin/bash
+#2014-08-28
+mkfifo tmp1.csv tmp2.csv tmp.csv
+echo 'N >< S'
+(cut -d\| -f1,4 supplier.csv > tmp.csv &
+cut -d\| -f1,4 supplier.tbl | sort -t\| -k2,2 | cat tmp.csv - > tmp1.csv)&
+cat nation.tbl | grep 'GERMANY' | cut -d\| -f1 | sort | cut -d\| -f1 nation.csv - |\
+join --header -t\| -1 2 -2 1 tmp1.csv - > tmpsn.csv
+
+echo 'PS >< (partkey)'
+(head -1 tmpsn.csv | cut -d\| -f2 > tmp.csv&
+tail -n+2 tmpsn.csv | cut -d\| -f2 | sort | cat tmp.csv -  > tmp2.csv)&
+cut -d\| -f1,2,3,4 partsupp.tbl | sort -t\| -k2,2 | cut -d\| -f1-4 partsupp.csv - |\
+join --header -t\| -1 2 -2 1 - tmp2.csv > join1.csv
+
+#echo 'sum(ps_supplycost * ps_availqty) * 0.0001'
+sum=`awk -F\| '
+	BEGIN{SUM=0}
+	NR>1{SUM+=$3*$4}
+	END{print SUM*0.0001}
+' join1.csv`
+
+# 'sum(ps_supplycost * ps_availqty); sum(ps_supplycost * ps_availqty)>$sum'
+head -1 join1.csv > tmp1.csv &
+tail -n+2 join1.csv  | sort -r -t\| -k2,2 | cat tmp1.csv - | awk -F\| -v min=$sum '
+	NR==1{print $2,"value"}
+	NR==2{g2=$2;sum=$3*$4}
+	NR>2{
+		if(g2==$2 ){
+			sum+=$3*$4
+		}else{
+			if (sum>min)
+				printf("%d|%d\n",g2, sum);
+			g2=$2;sum=$3*$4;
+		}
+	}
+	END{print g2, sum}
+' OFS=\| > join2.csv
+head -1 join2.csv
+tail -n+2 join2.csv | sort -t\| -k2,2 -nr
+
+rm tmp*.csv join{1,2}.csv

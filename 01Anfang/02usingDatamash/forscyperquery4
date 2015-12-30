@@ -1,0 +1,24 @@
+#!/bin/bash
+#2014-08-31
+sort -k1,1 -t\| orders.tbl | cat orders.csv - | awk -F\| '
+	NR==1{
+		print $1"|" $6
+	}
+	NR>1 && $5<"1993-10-01" && $5>="1993-07-01"{
+		print $1"|" $6
+	}
+' > tmporder.csv
+
+sort -k1,1 -t\| lineitem.tbl |cat lineitem.csv - | awk -F\| '
+	NR==1 || $12<$13{
+		print $1
+	}
+' | uniq  > tmpline.csv
+
+join --header -t\| -1 1 -2 1 tmporder.csv tmpline.csv > join1.csv
+head -1 join1.csv > tmp1.csv
+tail -n+2 join1.csv | sort -t\| -k2,2 | cat tmp1.csv - |\
+tr '.,' ',.'|\
+datamash -H -t\| -g2  count 2
+
+rm tmpline.csv tmporder.csv join1.csv

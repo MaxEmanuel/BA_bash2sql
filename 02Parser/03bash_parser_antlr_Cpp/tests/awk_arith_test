@@ -1,0 +1,6 @@
+cat datei | awk ' $1=="true" {
+	bla = 10-3 ;
+	blab = 10-3 ;
+	bulb = 10-3 ;
+	print bla,blab,bulb;
+} '

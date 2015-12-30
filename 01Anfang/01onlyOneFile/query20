@@ -1,0 +1,34 @@
+#!/bin/bash
+# P >< PS (partkey)
+awk -F\; 'NR==1 || $2~/^forest/{print $1}' part.csv |\
+join --header -t\; -1 1 -2 1 partsupp.csv - > join1.csv
+
+#l_shipdate >= date '1994-01-01' and l_shipdate < date '1995-01-01'
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print $2,$3,$5
+	}
+	NR>1 && $11>="1994-01-01" && 11<"1995-01-01"{
+		print $2,$3,$5
+	}
+' OFS=\; | tr '.,' ',.' | datamash -H -s -t\; -g1,2 sum 3 |\
+# L >< (l_partkey = ps_partkey)
+join --header -t\; -1 1 -2 1 join1.csv - |tr '.,' ',.'|\
+# l_suppkey = ps_suppkey
+awk -F\; 'NR==1 || ($2=$6 && $3>$7*0.5){print $2}' part.csv > join2.csv
+
+# S >< (suppkey in...)
+head -1 join2.csv > tmp2.csv
+tail -n+2 join2.csv | sort >> tmp2.csv
+join --header -t\; -1 1 -2 1 supplier.csv tmp2.csv > join3.csv
+
+# S >< N (nationkey)
+head -1 join3.csv > tmp1.csv
+tail -n+2 join3.csv | sort -t\; -k4,4 >> tmp1.csv
+awk -F\; 'NR==1 || $2=="CANADA"{print $1}' nation.csv |\
+join --header -t\; -1 4 -2 1 tmp1.csv - | cut -d\; -f3,5 > join4.csv
+
+head -1 join4.csv
+tail -n+2 join4.csv | sort
+
+rm tmp*.csv join*.csv

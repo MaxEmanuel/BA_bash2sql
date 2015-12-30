@@ -1,0 +1,46 @@
+#!/bin/bash
+cat orders.csv | awk -F\; '
+	NR==1{
+		print $1 ";" $2
+	}
+	NR>1 && $5<"1995-01-01"&& $5>="1994-01-01"{
+		print $1 ";" $2
+	}
+' > tmporder.csv
+
+cat lineitem.csv | awk -F\; '
+	NR==1{
+		print $1 ";" $3";revenue"
+	}
+	NR>1{
+		suma=($6*(1.0-$7));
+		print $1 ";" $3 ";" suma
+	}
+' > tmpline.csv
+
+join --header -t\; -1 1 -2 1 tmporder.csv tmpline.csv > tmplo.csv
+
+#join customer nation supplier
+head -1 nation.csv > tmp1.csv
+awk -F\; 'NR==1{print $1";"$4}' supplier.csv > tmp2.csv
+awk -F\; 'NR==1{print $1";"$4}' customer.csv > tmp3.csv
+
+grep A nation.csv >> tmp1.csv
+awk -F\; 'NR>1{print $1";"$4}' supplier.csv | sort -t\; -k2 >> tmp2.csv
+awk -F\; 'NR>1{print $1";"$4}' customer.csv | sort -t\; -k2 >> tmp3.csv
+join --header -t\; -1 1 -2 2 tmp1.csv  tmp2.csv > tmpA.csv
+join --header -t\; -1 1 -2 2 tmpA.csv  tmp3.csv > join-cns.csv
+
+#join lo mit cns mit (order lineitem) ueber suppkey
+head -1 tmplo.csv > tmp1.csv
+head -1 join-cns.csv  > tmp2.csv
+tail -n +2 tmplo.csv | sort -t\; -k3 >> tmp1.csv
+tail -n +2 join-cns.csv | sort -t\; -k5 >> tmp2.csv
+join --header -t\; -1 3 -2 5 tmp1.csv  tmp2.csv > endjoin.csv
+
+
+cat endjoin.csv | awk -F\; '
+	NR==1{print $0}
+	NR>1 && $1==$8{print $0}' | datamash -H -s -t\; -g5 sum 3 > blabl.csv
+rm tmpline.csv tmporder.csv tmplo.csv tmp1.csv tmp2.csv tmp3.csv tmpA.csv join-cns.csv endjoin.csv
+

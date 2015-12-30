@@ -1,0 +1,65 @@
+\BOOKMARK [0][-]{section*.1}{Abstract}{}% 1
+\BOOKMARK [0][-]{chapter.1}{Einf\374hrung}{}% 2
+\BOOKMARK [1][-]{section.1.1}{Motivation}{chapter.1}% 3
+\BOOKMARK [1][-]{section.1.2}{Textbasierte Datenbanken}{chapter.1}% 4
+\BOOKMARK [1][-]{section.1.3}{Vorgehen}{chapter.1}% 5
+\BOOKMARK [0][-]{chapter.2}{Bash statt SQL}{}% 6
+\BOOKMARK [1][-]{section.2.1}{Relationale Algebra der Unix-Shell im Vergleich zu SQL}{chapter.2}% 7
+\BOOKMARK [2][-]{subsection.2.1.1}{Grundlage}{section.2.1}% 8
+\BOOKMARK [2][-]{subsection.2.1.2}{Selektion}{section.2.1}% 9
+\BOOKMARK [2][-]{subsection.2.1.3}{Projektion}{section.2.1}% 10
+\BOOKMARK [2][-]{subsection.2.1.4}{Vereinigung}{section.2.1}% 11
+\BOOKMARK [2][-]{subsection.2.1.5}{Kreuzprodukt}{section.2.1}% 12
+\BOOKMARK [2][-]{subsection.2.1.6}{Mengendifferenz}{section.2.1}% 13
+\BOOKMARK [2][-]{subsection.2.1.7}{Umbennenung}{section.2.1}% 14
+\BOOKMARK [2][-]{subsection.2.1.8}{Relationaler Verbund}{section.2.1}% 15
+\BOOKMARK [2][-]{subsection.2.1.9}{Gruppierung und Aggregation}{section.2.1}% 16
+\BOOKMARK [1][-]{section.2.2}{Performanzmessungen}{chapter.2}% 17
+\BOOKMARK [2][-]{subsection.2.2.1}{TPC-H Benchmarks}{section.2.2}% 18
+\BOOKMARK [2][-]{subsection.2.2.2}{Implementierung mit Shell-Skripten}{section.2.2}% 19
+\BOOKMARK [2][-]{subsection.2.2.3}{Optimierung durch Parallelisierung}{section.2.2}% 20
+\BOOKMARK [0][-]{chapter.3}{Vergleich}{}% 21
+\BOOKMARK [1][-]{section.3.1}{SQL-\344hnliche Syntax}{chapter.3}% 22
+\BOOKMARK [2][-]{subsection.3.1.1}{Datamash}{section.3.1}% 23
+\BOOKMARK [2][-]{subsection.3.1.2}{csvtool}{section.3.1}% 24
+\BOOKMARK [2][-]{subsection.3.1.3}{Fsdb}{section.3.1}% 25
+\BOOKMARK [1][-]{section.3.2}{Abfragen mit SQL}{chapter.3}% 26
+\BOOKMARK [2][-]{subsection.3.2.1}{txt-sushi}{section.3.2}% 27
+\BOOKMARK [2][-]{subsection.3.2.2}{csvfix}{section.3.2}% 28
+\BOOKMARK [2][-]{subsection.3.2.3}{csvkit}{section.3.2}% 29
+\BOOKMARK [2][-]{subsection.3.2.4}{querycsv.py}{section.3.2}% 30
+\BOOKMARK [2][-]{subsection.3.2.5}{gcsvsql}{section.3.2}% 31
+\BOOKMARK [2][-]{subsection.3.2.6}{Mynodbcsv}{section.3.2}% 32
+\BOOKMARK [2][-]{subsection.3.2.7}{shql}{section.3.2}% 33
+\BOOKMARK [0][-]{chapter.4}{Parser mit Yacc und Lex}{}% 34
+\BOOKMARK [1][-]{section.4.1}{Vorwissen zu Yacc und Lex}{chapter.4}% 35
+\BOOKMARK [1][-]{section.4.2}{Der Bash2SQL-\334bersetzer mit Yacc}{chapter.4}% 36
+\BOOKMARK [2][-]{subsection.4.2.1}{Arbeitsweise}{section.4.2}% 37
+\BOOKMARK [2][-]{subsection.4.2.2}{Bedienung des Bash2SQL-\334bersetzers}{section.4.2}% 38
+\BOOKMARK [0][-]{chapter.5}{Parser mit ANTLR}{}% 39
+\BOOKMARK [1][-]{section.5.1}{Konfiguration}{chapter.5}% 40
+\BOOKMARK [2][-]{subsection.5.1.1}{Installieren der Bibliothek}{section.5.1}% 41
+\BOOKMARK [2][-]{subsection.5.1.2}{Starten von ANTLR}{section.5.1}% 42
+\BOOKMARK [2][-]{subsection.5.1.3}{Vorwissen zu ANTLR}{section.5.1}% 43
+\BOOKMARK [1][-]{section.5.2}{Der Bash2SQL-\334bersetzer mit ANTLR in C}{chapter.5}% 44
+\BOOKMARK [2][-]{subsection.5.2.1}{Neues Konzept}{section.5.2}% 45
+\BOOKMARK [2][-]{subsection.5.2.2}{C-Quellcode}{section.5.2}% 46
+\BOOKMARK [2][-]{subsection.5.2.3}{Die Grammatik}{section.5.2}% 47
+\BOOKMARK [2][-]{subsection.5.2.4}{Bedienung}{section.5.2}% 48
+\BOOKMARK [1][-]{section.5.3}{Der Bash2SQL-\334bersetzer mit ANTLR in C++}{chapter.5}% 49
+\BOOKMARK [2][-]{subsection.5.3.1}{Unterschiede: C vs. C++ mit ANTLR}{section.5.3}% 50
+\BOOKMARK [2][-]{subsection.5.3.2}{Die Klasse TheQuery}{section.5.3}% 51
+\BOOKMARK [2][-]{subsection.5.3.3}{Der Parser n\344her betrachtet}{section.5.3}% 52
+\BOOKMARK [2][-]{subsection.5.3.4}{Bedienung}{section.5.3}% 53
+\BOOKMARK [2][-]{subsection.5.3.5}{R\374ck\374bersetzung einer TPC-H Abfrage}{section.5.3}% 54
+\BOOKMARK [0][-]{chapter.6}{Ausblick}{}% 55
+\BOOKMARK [1][-]{section.6.1}{Schleifen}{chapter.6}% 56
+\BOOKMARK [1][-]{section.6.2}{Sprache awk separat}{chapter.6}% 57
+\BOOKMARK [1][-]{section.6.3}{Vor \334bersetzen zusammenf\374gen}{chapter.6}% 58
+\BOOKMARK [1][-]{section.6.4}{Fazit}{chapter.6}% 59
+\BOOKMARK [-1][]{part*.9}{Appendix}{}% 60
+\BOOKMARK [0][-]{appendix.A}{TPC-H-Abfragen}{part*.9}% 61
+\BOOKMARK [1][-]{section.A.1}{Abfragen}{appendix.A}% 62
+\BOOKMARK [1][-]{section.A.2}{Parallelisierte Abfragen}{appendix.A}% 63
+\BOOKMARK [0][-]{appendix.B}{datamash Abfragen}{part*.9}% 64
+\BOOKMARK [0][-]{appendix*.75}{Literaturverzeichnis}{part*.9}% 65

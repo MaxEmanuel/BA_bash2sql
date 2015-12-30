@@ -1,0 +1,20 @@
+#!/bin/bash
+#2014-08-28
+mkfifo tmp2.csv
+# P >< L (partkey)
+(cat lineitem.tbl | awk -F\| '
+	$11>="1995-09-01" && $11<"1995-10-01"{
+		print $2,$6,$7
+	}
+' OFS=\| | sort -t\| -k1,1 | cat <(cut lineitem.csv -d\| -f2,6,7) - > tmp2.csv)&
+
+cut -d\| -f1-5 part.tbl | sort -t\| -k1,1 | cut -d\| -f1,5 part.csv - |\
+join --header -t\| -1 1 -2 1 - tmp2.csv |\
+awk -F\| '
+	BEGIN{sum=0; sumpromo=0; print "promo_revenue"}
+	{	rev=$3*(1.0-$4);
+		sum+=rev}
+	$2~/PROMO.*/{sumpromo+=rev}
+	END{print sumpromo/sum*100}
+'
+rm tmp2.csv

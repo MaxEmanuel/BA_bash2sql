@@ -1,0 +1,64 @@
+#!/bin/bash
+#2014-08-27
+mkfifo tmp{,1,nation}.csv
+# N x N >< C >< O >< L >< S
+# NxN (Germany,France)
+(sort -t\| -k1,1 nation.tbl | cut nation.csv - -d\| -f1,2 | awk -F\| '
+	NR==1{print "cust_n_key|cust_n_name|supp_n_key|supp_n_name"}
+	NR>1 && ($2=="FRANCE"|| $2 =="GERMANY"){
+		lines[i++]=$0
+	}
+	END{
+		for (i in lines)
+		  for (j in lines)
+		    print lines[i] "|"  lines[j]
+	}
+' | awk -F\| 'NR==1 || 
+	($2=="FRANCE" && $4=="GERMANY") || 
+	($4=="FRANCE" && $2=="GERMANY"){print $0}'> tmpnation.csv)&
+
+# >< C (nationkey)
+cat customer.tbl | sort -t\| -k4,4 | cut -d\| -f1,4 customer.csv - |\
+join --header -t\| -1 1 -2 2 tmpnation.csv - > join1.csv
+
+# >< O (custkey)
+(head -1 join1.csv > tmp.csv &
+tail -n+2 join1.csv | sort -t\| -k5,5 | cat tmp.csv - > tmp1.csv)&
+sort -t\| -k2,2 orders.tbl | cut -d\| -f1,2 orders.csv - |\
+join --header -t\| -1 5 -2 2 tmp1.csv - > join2.csv
+
+# >< L (orderkey)
+(head -1 join2.csv > tmp.csv &
+tail -n+2 join2.csv | sort -t\| -k6,6 | cat tmp.csv - > tmp1.csv)&
+cat lineitem.tbl | awk -F\| '
+	$11>="1995-01-01" && $11 <="1996-12-31"{
+		print $0
+	}
+' OFS=\| | sort -t\| -k1,1 | cut -d\| -f1,3,6,7,11 lineitem.csv - |\
+join --header -t\| -1 6 -2 1 tmp1.csv - > join3.csv
+
+# >< S (nationkey, suppkey)
+(head -1 join3.csv > tmp.csv &
+tail -n+2 join3.csv | sort -t\| -k7,7 | cat tmp.csv - > tmp1.csv)&
+cat supplier.tbl | sort -t\| -k1,1 | cut -d\| -f1,4 supplier.csv - |\
+# -k5,5 
+join --header -t\| -1 7 -2 1 tmp1.csv - | awk -F\| '
+	NR>1 && $6==$11{
+		print $7, $5, substr($10,1,4), $8*(1.0-$9)
+	}
+' OFS=\| > join4.csv
+cat join4.csv | sort | awk -F\| '
+	BEGIN{print "supp_nation|cust_nation|l_year|revenue"}
+	NR==1{g1=$1; g2=$2; g3=$3; sum=$4}
+	NR>1{
+		if( g1==$1 && g2==$2 && g3==$3 ){
+			sum+=$4
+		}else{
+			print g1,g2,g3,sum;
+			g1=$1; g2=$2; g3=$3; sum=$4;
+		}
+	}
+	END{print g1,g2,g3,sum}
+' OFS=\|
+
+rm tmp1.csv join{1,2,3}.csv tmpnation.csv tmp.csv

@@ -1,0 +1,41 @@
+#!/bin/bash
+echo 'N >< S'
+head -1 supplier.csv | cut -d\| -f1,4 > tmp1.csv
+cat  supplier.tbl | cut -d\| -f1,4 | sort -t\| -k2,2 >> tmp1.csv
+head -1 nation.csv | cut -d\| -f1 > tmp2.csv
+cat nation.tbl | grep 'GERMANY' | cut -d\| -f1 | sort >> tmp2.csv
+join --header -t\| -1 2 -2 1 tmp1.csv tmp2.csv > tmpsn.csv
+
+echo 'PS >< (partkey)'
+head -1 partsupp.csv | cut -d\| -f1,2,3,4 > tmp1.csv
+cat partsupp.tbl | cut -d\| -f1,2,3,4 | sort -t\| -k2,2 >> tmp1.csv
+head -1 tmpsn.csv | cut -d\| -f2 > tmp2.csv
+tail -n+2 tmpsn.csv | cut -d\| -f2 | sort >> tmp2.csv
+join --header -t\| -1 2 -2 1 tmp1.csv tmp2.csv > join.csv
+
+#echo 'sum(ps_supplycost * ps_availqty) * 0.0001'
+sum=`awk -F\| '
+	BEGIN{SUM=0}
+	NR>1{SUM+=$3*$4}
+	END{print SUM*0.0001}
+' join.csv`
+#echo $sum
+
+# 'sum(ps_supplycost * ps_availqty); sum(ps_supplycost * ps_availqty)>$sum'
+awk -F\| '
+	NR==1{
+		print $2"|value"
+	}
+	NR>1 {
+		mul=$3*$4
+		print $2"|"mul
+	}
+' join.csv | tr ',.' '.,' | datamash -H -s -t\| -g1 sum 2 | awk -F\| "
+	NR==1||\$2>$sum{
+		print \$0
+	}
+" > tmpfile.csv
+head -1 tmpfile.csv
+tail -n+2 tmpfile.csv | sort -t\| -k2,2 -nr
+
+rm tmp*.csv join.csv

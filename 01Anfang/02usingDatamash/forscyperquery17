@@ -1,0 +1,37 @@
+#!/bin/bash
+# 2014-08-19
+## L >< P (partkey)
+head -1 lineitem.csv | cut -d\| -f2,5,6 > tmp1.csv
+cut -d\| -f2,5,6 lineitem.tbl | sort -t\| -k1,1 >> tmp1.csv
+
+head -1 part.csv | cut -d\| -f1,4,7 > tmp2.csv
+cut -d\| -f1,4,7 part.tbl | sort -t\| -k1,1 >> tmp2.csv
+join --header -t\| -1 1 -2 1 tmp1.csv tmp2.csv > join1.csv
+
+#avg(l_quantity) pro partkey
+head -1 join1.csv > tmp1.csv
+tail -n+2 join1.csv | sort -t\| -k1,1 | cat tmp1.csv - |\
+#tr '.,' ',.'|\
+datamash -H -t\| -g1 mean 2 |\
+#tr '.,' ',.'|\
+> tmpavgs.csv
+#dann join mit join1
+join --header -t\| -1 1 -2 1 join1.csv tmpavgs.csv | tee join2.csv |\
+#greife die relevanten raus
+awk -F\| '
+	NR==1{
+		print $0
+	}
+	NR>1 && $4=="Brand#23" && $5=="MED BOX" && $2<$6*0.2 {
+		print $0
+	}
+' | tee join3.csv |\
+awk -F\| '
+	BEGIN{
+		print "avg_yearly"
+		sum=0
+	}
+	NR>1{ sum+=$3}
+	END{ print sum/7.0 }
+'
+rm tmp*.csv join1.csv join2.csv join3.csv

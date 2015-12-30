@@ -1,0 +1,3 @@
+cat datei | awk ' $2==2 {
+	print $2
+} '

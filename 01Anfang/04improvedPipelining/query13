@@ -1,0 +1,35 @@
+#!/bin/bash
+#2014-08-26
+echo 'c_count|custdist'
+# C |>< O
+# left outer join ^= join -a1 -a2 -1 2 -2 2 -o 0 1.1 2.1 -e "0" 1.txt 2.txt
+#join -a1 -a2 -1 2 -2 2 -o 0 1.1 -e "0" 1.txt 2.txt
+head -1 orders.csv | cut -d\| -f2 > tmp2.csv
+cat orders.tbl |grep -v 'special.*requests' | cut -d\| -f2 | sort >> tmp2.csv
+cut -d\| -f1,2 customer.tbl | sort -t\| -k1,1 | cut -d\| -f1,2 customer.csv - |\
+join --header -t\| -1 1 -2 1 -a1 -o 0 2.1 -e "NULL" - tmp2.csv |\
+awk -F\| '
+	NR==1{print $1,"count"}
+	NR==2{g1=$1; count=0}
+	NR>2{
+		if(g1!=$1){
+			print g1, count;
+			g1=$1;count=0;
+		}
+	}
+	$2!="NULL"{count++}
+	END{print g1, count}
+' OFS=\| | tail -n+2 | sort -t\| -k2,2 | awk -F\| '
+	NR==1{g2=$2;count=1}
+	NR>1{
+		if(g2==$2){
+			count++;
+		}else{
+			print g2, count;
+			g2=$2;count=1;
+		}
+	}
+	END{print g2, count}
+' OFS=\| | sort -t\| -k2,2 -nr
+
+rm tmp2.csv 

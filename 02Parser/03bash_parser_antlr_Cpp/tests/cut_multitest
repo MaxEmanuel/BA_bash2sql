@@ -1,0 +1,1 @@
+cat <(cat datei) <datei2 | cut -f2,4-6 |grep muster | cut -f1,2 |grep m2

@@ -1,0 +1,25 @@
+#!/bin/bash
+#2014-08-27
+mkfifo tmporder.csv
+
+(sort -k1,1 -t\| orders.tbl | cat orders.csv - | awk -F\| '
+	NR==1{
+		print $1"|" $6
+	}
+	NR>1 && $5<"1993-10-01" && $5>="1993-07-01"{
+		print $1"|" $6
+	}
+' > tmporder.csv)&
+
+sort -k1,1 -t\| lineitem.tbl |cat lineitem.csv - | awk -F\| '
+	NR==1 || $12<$13{
+		print $1
+	}
+' | uniq  > tmpline.csv
+
+join --header -t\| -1 1 -2 1 tmporder.csv tmpline.csv | tee tmp.csv |\
+
+# count mittels uniq
+cut -d\| -f2 | tail -n+2 | sort | uniq -c
+
+rm tmp*.csv 

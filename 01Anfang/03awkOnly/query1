@@ -1,0 +1,33 @@
+#!/bin/bash
+#2014-08-25
+cat lineitem.* | awk -F\| '
+	NR==1{
+		print $0, "sum_disc","sum_charge"
+	}
+	NR>1 && $11<="1998-9-2"{
+		suma=($6*(1.0-$7));
+		sumb=($6*(1.0-$7)*(1.0+$8));
+		print $0 suma,sumb
+	}
+' OFS=\| > tmp.csv
+head -1 tmp.csv > tmp2.csv
+tail -n+2 tmp.csv | sort -t\| -k9,10 >> tmp2.csv
+cat tmp2.csv | awk -F\| '
+	NR==1{ count=1; sum5=sum6=sum17=sum18=sum7=0;
+		print $9, $10, $5, $6, $17, $18, $5, $6, $7, "count"
+	}
+	NR==2{	g9=$9; g10=$10; count=1;
+		sum5=$5; sum6=$6;
+		sum17=$17; sum18=$18; sum7=$7;}
+	NR>2{
+		if( g9==$9 && g10==$10 ){
+			count++; sum5+=$5; sum6+=$6;
+			sum17+=$17; sum18+=$18; sum7+=$7;
+		}else{
+			print g9,g10,sum5,sum6,sum17, sum18, sum5/count, sum6/count, sum7/count, count;
+			g9=$9; g10=$10; count=1;
+			sum5=$5; sum6=$6;
+			sum17=$17; sum18=$18; sum7=$7;}
+	}
+	END{print g9,g10,sum5,sum6,sum17, sum18, sum5/count, sum6/count, sum7/count, count;}
+' OFS=\|
