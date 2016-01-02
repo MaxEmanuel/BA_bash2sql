@@ -1,8 +1,8 @@
 OBJ = SimpleBashSQL
-CFLAGS=-I/home/maximilian/Downloads/antlr3-master/runtime/Cpp/include 
-all: simplebashsql
+CFLAGS=-I../antlr3-master/runtime/Cpp/include 
+all: bash2sql
 
-simplebashsql: theparser thequery.o
+bash2sql: theparser thequery.o
 	g++ -std=c++11 -g -o $@ $(CFLAGS) -lantlr3c $(OBJ)Parser.cpp $(OBJ)Lexer.cpp thequery.o
 	rm thequery.o
 
